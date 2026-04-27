@@ -200,5 +200,30 @@ export const playerClubsRelations = relations(playerClubs, ({ one, many }) => ({
 
 export const roundsRelations = relations(rounds, ({ one, many }) => ({
   user: one(users, { fields: [rounds.userId], references: [users.id] }),
+  season: one(seasons, { fields: [rounds.seasonId], references: [seasons.id] }),
   holes: many(roundHoles),
+}))
+
+export const clubDistancesRelations = relations(clubDistances, ({ one }) => ({
+  user: one(users, { fields: [clubDistances.userId], references: [users.id] }),
+  playerClub: one(playerClubs, { fields: [clubDistances.playerClubId], references: [playerClubs.id] }),
+}))
+
+export const challengeResultsRelations = relations(challengeResults, ({ one }) => ({
+  user: one(users, { fields: [challengeResults.userId], references: [users.id] }),
+  challenge: one(challenges, { fields: [challengeResults.challengeId], references: [challenges.id] }),
+  season: one(seasons, { fields: [challengeResults.seasonId], references: [seasons.id] }),
+}))
+
+export const challengesRelations = relations(challenges, ({ many }) => ({
+  results: many(challengeResults),
+}))
+
+export const roundHolesRelations = relations(roundHoles, ({ one }) => ({
+  round: one(rounds, { fields: [roundHoles.roundId], references: [rounds.id] }),
+}))
+
+export const rosterEntriesRelations = relations(rosterEntries, ({ one }) => ({
+  user: one(users, { fields: [rosterEntries.userId], references: [users.id] }),
+  season: one(seasons, { fields: [rosterEntries.seasonId], references: [seasons.id] }),
 }))

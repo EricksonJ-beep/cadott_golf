@@ -1,35 +1,13 @@
-import NextAuth, { type DefaultSession } from 'next-auth'
-import type { NextAuthConfig } from 'next-auth'
-import type { JWT } from 'next-auth/jwt'
+import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { db } from '@/db'
 import { users } from '@/db/schema'
 import { eq } from 'drizzle-orm'
+import { authConfig } from './auth.config'
 
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string
-      role: string
-      mustChangePassword: boolean
-    } & DefaultSession['user']
-  }
-  interface User {
-    role: string
-    mustChangePassword: boolean
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string
-    role: string
-    mustChangePassword: boolean
-  }
-}
-
-const config: NextAuthConfig = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -62,29 +40,4 @@ const config: NextAuthConfig = {
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id!
-        token.role = user.role
-        token.mustChangePassword = user.mustChangePassword
-      }
-      return token
-    },
-    session({ session, token }) {
-      session.user.id = token.id
-      session.user.role = token.role
-      session.user.mustChangePassword = token.mustChangePassword
-      return session
-    },
-  },
-  pages: {
-    signIn: '/',
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60,
-  },
-}
-
-export const { handlers, auth, signIn, signOut } = NextAuth(config)
+})

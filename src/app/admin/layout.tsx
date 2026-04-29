@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -12,9 +13,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-40 bg-black text-white h-14 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-[#FFD700] flex items-center justify-center text-black text-xs font-bold select-none">
-            C
-          </div>
+          <Image
+            src="/logo/hornet.png"
+            alt="Cadott Hornets"
+            width={28}
+            height={28}
+            className="w-7 h-7 object-contain"
+          />
           <span className="font-bold text-base">Cadott Golf</span>
           <span className="text-zinc-500 text-sm hidden sm:block">Admin</span>
         </div>

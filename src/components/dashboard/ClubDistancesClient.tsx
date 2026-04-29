@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 
 type Distance = {
   id: number
@@ -37,14 +35,11 @@ const SWING_LABELS: Record<string, string> = {
   quarter: '¼',
 }
 
-const WEDGE_TYPES = ['wedge']
-
 function latestDistance(distances: Distance[], swingType: string) {
   return distances.find((d) => d.swingType === swingType) ?? null
 }
 
 function ClubRow({ club, onEdit }: { club: Club; onEdit: (club: Club) => void }) {
-  const [, startTransition] = useTransition()
   const name = club.customName || club.defaultClub?.name || 'Club'
   const isWedge = club.defaultClub?.type === 'wedge'
   const fullDist = latestDistance(club.distances, 'full')
@@ -56,12 +51,6 @@ function ClubRow({ club, onEdit }: { club: Club; onEdit: (club: Club) => void })
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-medium text-sm truncate">{name}</span>
-          {fullDist?.isGoTo && (
-            <Badge className="bg-green-100 text-green-800 text-[10px] px-1.5 py-0">✓ Go-To</Badge>
-          )}
-          {fullDist?.isAvoid && (
-            <Badge className="bg-red-100 text-red-800 text-[10px] px-1.5 py-0">✗ Avoid</Badge>
-          )}
         </div>
         <Button
           size="sm"
@@ -80,9 +69,6 @@ function ClubRow({ club, onEdit }: { club: Club; onEdit: (club: Club) => void })
             )}
             {fullDist.totalYards && (
               <span>Total <strong className="text-foreground">{fullDist.totalYards}y</strong></span>
-            )}
-            {fullDist.typicalMiss && (
-              <span>Miss: <strong className="text-foreground">{fullDist.typicalMiss}</strong></span>
             )}
           </div>
           {isWedge && (
@@ -180,41 +166,6 @@ function EditClubModal({
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="typicalMiss">Typical Miss</Label>
-              <Input
-                id="typicalMiss"
-                name="typicalMiss"
-                type="text"
-                placeholder="e.g. fade right"
-                defaultValue={existing?.typicalMiss ?? ''}
-                className="h-11"
-              />
-            </div>
-            {swingType === 'full' && (
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isGoTo"
-                    value="true"
-                    defaultChecked={existing?.isGoTo ?? false}
-                    className="accent-[#FFD700] w-4 h-4"
-                  />
-                  Go-To club
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isAvoid"
-                    value="true"
-                    defaultChecked={existing?.isAvoid ?? false}
-                    className="accent-[#FFD700] w-4 h-4"
-                  />
-                  Avoid
-                </label>
-              </div>
-            )}
             <Button
               type="submit"
               disabled={pending}

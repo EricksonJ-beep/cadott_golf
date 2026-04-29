@@ -164,6 +164,55 @@ async function main() {
     console.log('  Practice plans already exist, skipping')
   }
 
+  // Placeholder challenges
+  const existingChallenges = await db.select().from(schema.challenges)
+  if (existingChallenges.length === 0) {
+    await db.insert(schema.challenges).values([
+      {
+        name: '10 from 5 Feet',
+        type: 'range',
+        category: 'putting',
+        scoringType: 'score_out_of',
+        maxScore: 10,
+        description: 'Hit 10 putts from 5 feet. Count how many you make. Your score is makes out of 10.',
+      },
+      {
+        name: 'Chip & Stick',
+        type: 'range',
+        category: 'chipping',
+        scoringType: 'score_out_of',
+        maxScore: 10,
+        description: 'Chip 10 balls from off the green. Score = number that finish within 6 feet of the hole.',
+      },
+      {
+        name: 'Longest Drive',
+        type: 'range',
+        category: 'driving',
+        scoringType: 'count',
+        unit: 'yards',
+        description: 'Hit a measured drive. Log the carry distance in yards. Your best ever stays as the all-time record.',
+      },
+      {
+        name: 'Fairways out of 10',
+        type: 'range',
+        category: 'driving',
+        scoringType: 'score_out_of',
+        maxScore: 10,
+        description: 'Hit 10 drives at a fairway target. Score = number that land in the fairway.',
+      },
+      {
+        name: '5 in a Row from 3 Feet',
+        type: 'range',
+        category: 'putting',
+        scoringType: 'pass_fail',
+        description: 'Make 5 consecutive putts from 3 feet. Pass if you make all 5 in a row. If you miss, start over.',
+      },
+    ])
+    console.log('✓ 5 placeholder challenges inserted')
+  } else {
+    console.log('  Challenges already exist, skipping')
+  }
+
   console.log('\nSeed complete.')
 }
 

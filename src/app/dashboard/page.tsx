@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       {activeTab === 'practice'   && <PracticeTab />}
       {activeTab === 'challenges' && <ChallengesTab userId={userId} />}
       {activeTab === 'stats'      && <StatsTab userId={userId} />}
-      {activeTab === 'rounds'     && <RoundsTab userId={userId} />}
+      {activeTab === 'rounds'     && <RoundsTab />}
     </div>
   )
 }

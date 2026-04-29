@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cadott-golf-v1'
+const CACHE_NAME = 'cadott-golf-v2'
 
 const PRECACHE_URLS = [
   '/',

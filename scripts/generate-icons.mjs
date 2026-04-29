@@ -2,7 +2,7 @@ import sharp from 'sharp'
 import { mkdir, copyFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-const SRC = 'public/logo/Cadott_School_District_logo.png'
+const SRC = 'public/logo/Cadott Golf Logo 2.png'
 const ICONS_DIR = 'public/icons'
 const LOGO_DIR = 'public/logo'
 

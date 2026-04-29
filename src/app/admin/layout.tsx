@@ -13,13 +13,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-40 bg-black text-white h-14 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
-          <Image
-            src="/logo/hornet.png"
-            alt="Cadott Hornets"
-            width={28}
-            height={28}
-            className="w-7 h-7 object-contain"
-          />
+          <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+            <Image
+              src="/logo/hornet.png"
+              alt="Cadott Hornets"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain"
+            />
+          </div>
           <span className="font-bold text-base">Cadott Golf</span>
           <span className="text-zinc-500 text-sm hidden sm:block">Admin</span>
         </div>

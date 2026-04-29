@@ -9,14 +9,16 @@ export default async function AppHeader() {
   return (
     <header className="sticky top-0 z-40 bg-black text-white h-14 flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
-        <Image
-          src="/logo/hornet.png"
-          alt="Cadott Hornets"
-          width={32}
-          height={32}
-          className="w-8 h-8 object-contain"
-          priority
-        />
+        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+          <Image
+            src="/logo/hornet.png"
+            alt="Cadott Hornets"
+            width={32}
+            height={32}
+            className="w-7 h-7 object-contain"
+            priority
+          />
+        </div>
         <span className="font-bold text-base tracking-tight">Cadott Golf</span>
       </div>
       <div className="flex items-center gap-3">

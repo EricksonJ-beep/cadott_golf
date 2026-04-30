@@ -34,7 +34,7 @@ export default async function RoundDetailPage({ params }: Props) {
 
   const totalPar = round.holes.reduce((s, h) => s + h.par, 0)
   const totalPutts = round.holes.reduce((s, h) => s + h.putts, 0)
-  const fwyOpps = round.holes.filter((h) => h.fairwayHit !== null).length
+  const fwyOpps = round.holes.filter((h) => h.par > 3).length
   const fwyHit = round.holes.filter((h) => h.fairwayHit === true).length
   const girHit = round.holes.filter((h) => h.gir).length
   const totalDiff = (round.totalScore ?? 0) - totalPar

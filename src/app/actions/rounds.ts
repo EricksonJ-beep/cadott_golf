@@ -148,7 +148,7 @@ export async function getMyCourseStats() {
       pars: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 0)::int`,
       bogeys: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 1)::int`,
       fairwaysHit: sql<number>`count(*) filter (where ${roundHoles.fairwayHit} = true)::int`,
-      fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.fairwayHit} is not null)::int`,
+      fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.par} > 3)::int`,
       girHit: sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
     })
     .from(rounds)

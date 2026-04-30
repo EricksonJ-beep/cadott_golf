@@ -79,7 +79,7 @@ export async function getPlayerSummary(userId: number) {
       eagles: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} <= -2)::int`,
       pars: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 0)::int`,
       fairwaysHit: sql<number>`count(*) filter (where ${roundHoles.fairwayHit} = true)::int`,
-      fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.fairwayHit} is not null)::int`,
+      fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.par} > 3)::int`,
       girHit: sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
       totalHoles: sql<number>`count(${roundHoles.id})::int`,
     })

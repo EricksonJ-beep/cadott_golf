@@ -26,7 +26,7 @@ export default async function BirdieBoardPage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-white pb-10">
       <header className="sticky top-0 z-40 bg-black text-white h-14 flex items-center px-4 gap-3">
-        <Link href="/dashboard?tab=rounds" className="text-[#FFD700] text-sm font-medium">
+        <Link href="/dashboard?tab=leaderboard" className="text-[#FFD700] text-sm font-medium">
           ← Back
         </Link>
         <span className="text-sm font-medium">Leaderboard</span>

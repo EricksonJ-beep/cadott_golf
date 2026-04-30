@@ -7,6 +7,7 @@ const tabs = [
   { id: 'info',       label: 'My Info',   icon: '👤' },
   { id: 'practice',  label: 'Practice',  icon: '📋' },
   { id: 'challenges',label: 'Challenges',icon: '🎯' },
+  { id: 'leaderboard',label: 'Board',    icon: '🏆' },
   { id: 'stats',     label: 'Stats',     icon: '📊' },
   { id: 'rounds',    label: 'Rounds',    icon: '⛳' },
 ]

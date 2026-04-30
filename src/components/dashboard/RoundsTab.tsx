@@ -8,15 +8,7 @@ export default async function RoundsTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Rounds</h2>
-        <Link
-          href="/birdie-board"
-          className="inline-flex items-center gap-1.5 bg-[#FFD700] text-black text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#e6c200]"
-        >
-          🏆 Leaderboard
-        </Link>
-      </div>
+      <h2 className="text-xl font-bold">Rounds</h2>
 
       <Link href="/rounds/new">
         <Button className="w-full h-12 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold">

@@ -2,9 +2,10 @@
 
 import { db } from '@/db'
 import { challenges, challengeResults, seasons, historicalSeasonStats, rounds, roundHoles } from '@/db/schema'
-import { and, asc, desc, eq, max, min, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, max, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { BADGE_DEFS, computeEarnedBadges, type EarnedMap, type RoundForBadges } from '@/lib/badges'
 
 async function requireUser() {
   const session = await auth()
@@ -124,4 +125,87 @@ export async function getMyRoundRecords() {
     allTimeRounds,
     historicalSeasons: hist,
   }
+}
+
+export async function getMySeasonSummary() {
+  const session = await requireUser()
+  const userId = Number(session.user!.id)
+
+  const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
+  if (!season) return null
+
+  const [summary] = await db
+    .select({
+      avgScore9:  sql<number | null>`avg(${rounds.totalScore}) filter (where ${rounds.holesPlayed} = 9)::float`,
+      avgScore18: sql<number | null>`avg(${rounds.totalScore}) filter (where ${rounds.holesPlayed} = 18)::float`,
+      rounds9:    sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 9)::int`,
+      rounds18:   sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 18)::int`,
+      eagles:     sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} <= -2)::int`,
+      birdies:    sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = -1)::int`,
+      pars:       sql<number>`count(*) filter (where ${roundHoles.score} = ${roundHoles.par})::int`,
+      bogeys:     sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 1)::int`,
+      doubles:    sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} >= 2)::int`,
+    })
+    .from(rounds)
+    .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))
+    .where(and(eq(rounds.userId, userId), eq(rounds.seasonId, season.id)))
+
+  return {
+    seasonName: season.name,
+    avgScore9: summary?.avgScore9 ?? null,
+    avgScore18: summary?.avgScore18 ?? null,
+    rounds9: summary?.rounds9 ?? 0,
+    rounds18: summary?.rounds18 ?? 0,
+    eagles: summary?.eagles ?? 0,
+    birdies: summary?.birdies ?? 0,
+    pars: summary?.pars ?? 0,
+    bogeys: summary?.bogeys ?? 0,
+    doubles: summary?.doubles ?? 0,
+  }
+}
+
+export async function getMyBadges(): Promise<EarnedMap> {
+  const session = await requireUser()
+  const userId = Number(session.user!.id)
+
+  const empty: EarnedMap = Object.fromEntries(BADGE_DEFS.map((b) => [b.id, null]))
+
+  const userRounds = await db
+    .select({
+      id: rounds.id,
+      date: rounds.date,
+      holesPlayed: rounds.holesPlayed,
+      totalScore: rounds.totalScore,
+    })
+    .from(rounds)
+    .where(eq(rounds.userId, userId))
+
+  if (userRounds.length === 0) return empty
+
+  const roundIds = userRounds.map((r) => r.id)
+  const holes = await db
+    .select({
+      roundId: roundHoles.roundId,
+      par: roundHoles.par,
+      score: roundHoles.score,
+      putts: roundHoles.putts,
+    })
+    .from(roundHoles)
+    .where(inArray(roundHoles.roundId, roundIds))
+
+  const holesByRound = new Map<number, { par: number; score: number; putts: number }[]>()
+  for (const h of holes) {
+    if (!holesByRound.has(h.roundId)) holesByRound.set(h.roundId, [])
+    holesByRound.get(h.roundId)!.push({ par: h.par, score: h.score, putts: h.putts })
+  }
+
+  const forBadges: RoundForBadges[] = userRounds.map((r) => ({
+    date: String(r.date),
+    holesPlayed: r.holesPlayed,
+    totalScore: r.totalScore,
+    holes: holesByRound.get(r.id) ?? [],
+  }))
+
+  const earned = computeEarnedBadges(forBadges)
+  return earned
 }

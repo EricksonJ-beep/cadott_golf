@@ -1,8 +1,18 @@
 'use server'
 
 import { db } from '@/db'
-import { users, practicePlans, practicePlanBlocks } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import {
+  users,
+  practicePlans,
+  practicePlanBlocks,
+  rounds,
+  challengeResults,
+  challenges,
+  clubDistances,
+  playerClubs,
+  clubsDefault,
+} from '@/db/schema'
+import { desc, eq, isNotNull } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -37,7 +47,11 @@ export async function createPlayer(prevState: string | null, formData: FormData)
   const name = (formData.get('name') as string)?.trim()
   const username = (formData.get('username') as string)?.trim().toLowerCase()
   const tempPassword = (formData.get('tempPassword') as string)?.trim()
-  const grade = formData.get('grade') ? Number(formData.get('grade')) : null
+  const roleRaw = (formData.get('role') as string) || 'player'
+  const role: 'player' | 'coach' = roleRaw === 'coach' ? 'coach' : 'player'
+  const grade = role === 'coach'
+    ? null
+    : (formData.get('grade') ? Number(formData.get('grade')) : null)
 
   if (!name || !username || !tempPassword) return 'Name, username, and temporary password are required.'
   if (tempPassword.length < 6) return 'Temporary password must be at least 6 characters.'
@@ -49,13 +63,14 @@ export async function createPlayer(prevState: string | null, formData: FormData)
   await db.insert(users).values({
     username,
     passwordHash: hash,
-    role: 'player',
+    role,
     name,
     grade,
     mustChangePassword: true,
   })
 
   revalidatePath('/admin/roster')
+  revalidatePath('/admin')
   return null
 }
 
@@ -70,10 +85,43 @@ export async function resetPlayerPassword(prevState: string | null, formData: Fo
   const hash = await bcrypt.hash(newPassword, 12)
   await db
     .update(users)
-    .set({ passwordHash: hash, mustChangePassword: true })
+    .set({ passwordHash: hash, mustChangePassword: true, passwordResetAt: new Date() })
     .where(eq(users.id, userId))
 
   revalidatePath('/admin/roster')
+  revalidatePath('/admin')
+  return null
+}
+
+export async function updateUserInfo(prevState: string | null, formData: FormData) {
+  await requireCoach()
+
+  const userId = Number(formData.get('userId'))
+  const name = (formData.get('name') as string)?.trim()
+  const username = (formData.get('username') as string)?.trim().toLowerCase()
+  const gradeRaw = formData.get('grade') as string | null
+  const grade = gradeRaw && gradeRaw.length > 0 ? Number(gradeRaw) : null
+
+  if (!userId) return 'Missing user.'
+  if (!name) return 'Name is required.'
+  if (!username) return 'Username is required.'
+
+  const conflict = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1)
+  if (conflict.length > 0 && conflict[0].id !== userId) {
+    return `Username "${username}" is already taken.`
+  }
+
+  await db
+    .update(users)
+    .set({ name, username, grade })
+    .where(eq(users.id, userId))
+
+  revalidatePath('/admin/roster')
+  revalidatePath('/admin')
   return null
 }
 
@@ -81,6 +129,154 @@ export async function togglePlayerActive(userId: number, isActive: boolean) {
   await requireCoach()
   await db.update(users).set({ isActive }).where(eq(users.id, userId))
   revalidatePath('/admin/roster')
+  revalidatePath('/admin')
+}
+
+const SWING_LABELS: Record<string, string> = {
+  full: 'Full',
+  three_quarter: '¾',
+  half: '½',
+  quarter: '¼',
+}
+
+export type FeedEvent = {
+  id: string
+  type: 'round' | 'challenge' | 'user_created' | 'password_reset' | 'club_distance'
+  timestamp: string
+  description: string
+  href?: string
+}
+
+export async function getActivityFeed(limit = 20): Promise<FeedEvent[]> {
+  await requireCoach()
+
+  const [
+    recentRounds,
+    recentChallenges,
+    recentUsers,
+    recentResets,
+    recentDistances,
+  ] = await Promise.all([
+    db
+      .select({
+        id: rounds.id,
+        createdAt: rounds.createdAt,
+        courseName: rounds.courseName,
+        totalScore: rounds.totalScore,
+        userName: users.name,
+      })
+      .from(rounds)
+      .innerJoin(users, eq(rounds.userId, users.id))
+      .orderBy(desc(rounds.createdAt))
+      .limit(25),
+    db
+      .select({
+        id: challengeResults.id,
+        createdAt: challengeResults.createdAt,
+        score: challengeResults.score,
+        userName: users.name,
+        challengeName: challenges.name,
+        challengeMax: challenges.maxScore,
+      })
+      .from(challengeResults)
+      .innerJoin(users, eq(challengeResults.userId, users.id))
+      .innerJoin(challenges, eq(challengeResults.challengeId, challenges.id))
+      .orderBy(desc(challengeResults.createdAt))
+      .limit(25),
+    db
+      .select({
+        id: users.id,
+        createdAt: users.createdAt,
+        name: users.name,
+        role: users.role,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(15),
+    db
+      .select({
+        id: users.id,
+        passwordResetAt: users.passwordResetAt,
+        name: users.name,
+      })
+      .from(users)
+      .where(isNotNull(users.passwordResetAt))
+      .orderBy(desc(users.passwordResetAt))
+      .limit(15),
+    db
+      .select({
+        id: clubDistances.id,
+        createdAt: clubDistances.createdAt,
+        swingType: clubDistances.swingType,
+        carryYards: clubDistances.carryYards,
+        userName: users.name,
+        customName: playerClubs.customName,
+        defaultName: clubsDefault.name,
+      })
+      .from(clubDistances)
+      .innerJoin(users, eq(clubDistances.userId, users.id))
+      .innerJoin(playerClubs, eq(clubDistances.playerClubId, playerClubs.id))
+      .leftJoin(clubsDefault, eq(playerClubs.clubId, clubsDefault.id))
+      .orderBy(desc(clubDistances.createdAt))
+      .limit(25),
+  ])
+
+  const events: FeedEvent[] = []
+
+  for (const r of recentRounds) {
+    const score = r.totalScore != null ? ` (${r.totalScore})` : ''
+    events.push({
+      id: `round-${r.id}`,
+      type: 'round',
+      timestamp: r.createdAt.toISOString(),
+      description: `${r.userName} saved a round at ${r.courseName}${score}`,
+      href: `/rounds/${r.id}`,
+    })
+  }
+
+  for (const c of recentChallenges) {
+    const max = c.challengeMax ? `/${c.challengeMax}` : ''
+    events.push({
+      id: `challenge-${c.id}`,
+      type: 'challenge',
+      timestamp: c.createdAt.toISOString(),
+      description: `${c.userName} logged ${c.score}${max} on ${c.challengeName}`,
+    })
+  }
+
+  for (const u of recentUsers) {
+    events.push({
+      id: `user-${u.id}`,
+      type: 'user_created',
+      timestamp: u.createdAt.toISOString(),
+      description: `${u.name} (${u.role}) was added to the roster`,
+    })
+  }
+
+  for (const r of recentResets) {
+    if (!r.passwordResetAt) continue
+    events.push({
+      id: `reset-${r.id}-${r.passwordResetAt.getTime()}`,
+      type: 'password_reset',
+      timestamp: r.passwordResetAt.toISOString(),
+      description: `Password was reset for ${r.name}`,
+    })
+  }
+
+  for (const d of recentDistances) {
+    const clubName = d.customName || d.defaultName || 'club'
+    const swing = SWING_LABELS[d.swingType] ?? d.swingType
+    const yards = d.carryYards != null ? ` (${d.carryYards}y)` : ''
+    events.push({
+      id: `distance-${d.id}`,
+      type: 'club_distance',
+      timestamp: d.createdAt.toISOString(),
+      description: `${d.userName} logged ${swing} ${clubName}${yards}`,
+    })
+  }
+
+  events.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+  return events.slice(0, limit)
 }
 
 export async function savePracticePlan(prevState: string | null, formData: FormData) {

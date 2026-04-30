@@ -3,6 +3,7 @@ import { db } from '@/db'
 import { users, practicePlans } from '@/db/schema'
 import { eq, count } from 'drizzle-orm'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import ActivityFeed from '@/components/admin/ActivityFeed'
 
 export default async function AdminOverviewPage() {
   const [[{ playerCount }], [{ planCount }]] = await Promise.all([
@@ -41,6 +42,7 @@ export default async function AdminOverviewPage() {
           <p className="text-xs text-muted-foreground mt-0.5">Build and manage the practice plan library</p>
         </Link>
       </div>
+      <ActivityFeed />
     </div>
   )
 }

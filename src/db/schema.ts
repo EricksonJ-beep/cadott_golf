@@ -32,6 +32,7 @@ export const users = pgTable('users', {
   photoUrl: text('photo_url'),
   mustChangePassword: boolean('must_change_password').notNull().default(true),
   isActive: boolean('is_active').notNull().default(true),
+  passwordResetAt: timestamp('password_reset_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -82,6 +83,7 @@ export const clubDistances = pgTable('club_distances', {
   isGoTo: boolean('is_go_to').notNull().default(false),
   isAvoid: boolean('is_avoid').notNull().default(false),
   dateLogged: date('date_logged').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
 // ── Practice plans ────────────────────────────────────────────────────────────
@@ -132,6 +134,7 @@ export const challengeResults = pgTable('challenge_results', {
   dateLogged: date('date_logged').notNull().defaultNow(),
   seasonId: integer('season_id').references(() => seasons.id),
   notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
 // ── Rounds ────────────────────────────────────────────────────────────────────

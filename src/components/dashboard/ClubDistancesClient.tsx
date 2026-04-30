@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { saveClubDistance, toggleClubHidden } from '@/app/actions/clubs'
+import { saveClubDistance, toggleClubHidden, updateClubName } from '@/app/actions/clubs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,11 +174,14 @@ function EditClubModal({
 }) {
   const [pending, startTransition] = useTransition()
   const [swingType, setSwingType] = useState(initialSwingType)
-  const name = club.customName || club.defaultClub?.name || 'Club'
+  const currentName = club.customName ?? club.defaultClub?.name ?? ''
+  const [nameDraft, setNameDraft] = useState(currentName)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
   const isWedge = club.defaultClub?.type === 'wedge'
   const existing = latestDistance(club.distances, swingType)
+  const nameDirty = nameDraft.trim() !== currentName.trim()
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleDistanceSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     fd.set('playerClubId', String(club.id))
@@ -189,65 +192,146 @@ function EditClubModal({
     })
   }
 
+  function handleRename() {
+    if (!nameDirty) return
+    startTransition(async () => {
+      await updateClubName(club.id, nameDraft.trim())
+      onClose()
+    })
+  }
+
+  function handleRemove() {
+    startTransition(async () => {
+      await toggleClubHidden(club.id, true)
+      onClose()
+    })
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
         <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="font-bold text-base">{name}</h3>
-          <button onClick={onClose} className="text-muted-foreground text-xl leading-none">&times;</button>
+          <h3 className="font-bold text-base truncate">{currentName || 'Club'}</h3>
+          <button onClick={onClose} className="text-muted-foreground text-xl leading-none shrink-0">&times;</button>
         </div>
         <div className="p-4 space-y-4">
-          {isWedge && (
+          <div className="space-y-1">
+            <Label htmlFor="customName">Club name</Label>
             <div className="flex gap-2">
-              {(['full', 'three_quarter', 'half', 'quarter'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSwingType(s)}
-                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                    swingType === s
-                      ? 'bg-[#FFD700] border-[#FFD700] text-black'
-                      : 'border-zinc-200 text-muted-foreground'
-                  }`}
-                >
-                  {SWING_LABELS[s]}
-                </button>
-              ))}
+              <Input
+                id="customName"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder={club.defaultClub?.name ?? ''}
+                className="h-11 flex-1"
+              />
+              <Button
+                type="button"
+                disabled={!nameDirty || pending}
+                onClick={handleRename}
+                className="h-11 bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-40"
+              >
+                Rename
+              </Button>
             </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="carryYards">Carry (yds)</Label>
-                <Input
-                  id="carryYards"
-                  name="carryYards"
-                  type="number"
-                  inputMode="numeric"
-                  defaultValue={existing?.carryYards ?? ''}
-                  className="h-11"
-                />
+            <p className="text-xs text-muted-foreground">
+              Rename your club (e.g. 5 Wood → 7 Wood). Leave blank to use the default.
+            </p>
+          </div>
+
+          <div className="border-t pt-4 space-y-3">
+            {isWedge && (
+              <div className="flex gap-2">
+                {(['full', 'three_quarter', 'half', 'quarter'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSwingType(s)}
+                    className={`flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                      swingType === s
+                        ? 'bg-[#FFD700] border-[#FFD700] text-black'
+                        : 'border-zinc-200 text-muted-foreground'
+                    }`}
+                  >
+                    {SWING_LABELS[s]}
+                  </button>
+                ))}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="totalYards">Total (yds)</Label>
-                <Input
-                  id="totalYards"
-                  name="totalYards"
-                  type="number"
-                  inputMode="numeric"
-                  defaultValue={existing?.totalYards ?? ''}
-                  className="h-11"
-                />
+            )}
+            <form onSubmit={handleDistanceSubmit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="carryYards">Carry (yds)</Label>
+                  <Input
+                    id="carryYards"
+                    name="carryYards"
+                    type="number"
+                    inputMode="numeric"
+                    defaultValue={existing?.carryYards ?? ''}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="totalYards">Total (yds)</Label>
+                  <Input
+                    id="totalYards"
+                    name="totalYards"
+                    type="number"
+                    inputMode="numeric"
+                    defaultValue={existing?.totalYards ?? ''}
+                    className="h-11"
+                  />
+                </div>
               </div>
-            </div>
-            <Button
-              type="submit"
-              disabled={pending}
-              className="w-full h-11 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold"
-            >
-              {pending ? 'Saving…' : 'Save'}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="w-full h-11 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold"
+              >
+                {pending ? 'Saving…' : 'Save Distance'}
+              </Button>
+            </form>
+          </div>
+
+          <div className="border-t pt-3">
+            {confirmingRemove ? (
+              <div className="space-y-2">
+                <p className="text-sm">
+                  Remove <strong>{currentName}</strong> from your bag?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You can restore it later from the &quot;hidden clubs&quot; list.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleRemove}
+                    disabled={pending}
+                    variant="destructive"
+                    className="flex-1 h-10"
+                  >
+                    {pending ? 'Removing…' : 'Yes, remove'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setConfirmingRemove(false)}
+                    className="flex-1 h-10"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingRemove(true)}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                Remove from my bag
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

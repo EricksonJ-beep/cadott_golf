@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-40 bg-black text-white h-14 flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-3">
+        <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
             <Image
               src="/logo/hornet.png"
@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
           <span className="font-bold text-base">Cadott Golf</span>
           <span className="text-zinc-500 text-sm hidden sm:block">Admin</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-2">
           <Link href="/dashboard" className="text-xs text-zinc-400 hover:text-white px-2">
             My Dashboard

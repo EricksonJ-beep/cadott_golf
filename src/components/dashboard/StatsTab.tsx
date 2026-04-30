@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getMyPersonalBests, getMyMostLoggedChallenge } from '@/app/actions/stats'
+import { getMyPersonalBests, getMyMostLoggedChallenge, getMyRoundRecords } from '@/app/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import TrendChart from './TrendChart'
@@ -27,12 +27,13 @@ function formatScore(
 }
 
 export default async function StatsTab({ userId }: { userId: number }) {
-  const [bests, mostLogged] = await Promise.all([
+  const [bests, mostLogged, records] = await Promise.all([
     getMyPersonalBests(),
     getMyMostLoggedChallenge(),
+    getMyRoundRecords(),
   ])
 
-  if (bests.length === 0) {
+  if (bests.length === 0 && records.allTimeRounds === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
         <span className="text-5xl">📊</span>
@@ -47,6 +48,56 @@ export default async function StatsTab({ userId }: { userId: number }) {
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-bold">Stats</h2>
+
+      {records.allTimeRounds > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">🏆 All-Time Records</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-center">
+              {records.allTimeLowest9 != null && (
+                <div>
+                  <div className="text-2xl font-bold tabular-nums">{records.allTimeLowest9}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Best 9-hole</div>
+                </div>
+              )}
+              {records.allTimeLowest18 != null && (
+                <div>
+                  <div className="text-2xl font-bold tabular-nums">{records.allTimeLowest18}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Best 18-hole</div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center pt-1">
+              <Badge variant="secondary">{records.allTimeRounds} Rounds</Badge>
+              {records.allTimeEagles > 0 && (
+                <Badge variant="secondary">
+                  <span className="text-amber-600 mr-1">●</span>{records.allTimeEagles} Eagle{records.allTimeEagles !== 1 ? 's' : ''}
+                </Badge>
+              )}
+              <Badge variant="secondary">
+                <span className="text-red-600 mr-1">●</span>{records.allTimeBirdies} Birdie{records.allTimeBirdies !== 1 ? 's' : ''}
+              </Badge>
+            </div>
+            {records.historicalSeasons.length > 0 && (
+              <div className="border-t pt-3 space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Season History</p>
+                {records.historicalSeasons.map((s) => (
+                  <div key={s.id} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{s.season} · {s.holesPlayed}-hole</span>
+                    <span className="tabular-nums font-medium">
+                      {s.roundsPlayed != null ? `${s.roundsPlayed} rounds` : ''}
+                      {s.lowestScore != null ? ` · Low ${s.lowestScore}` : ''}
+                      {s.averageScore != null ? ` · Avg ${s.averageScore.toFixed(1)}` : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {mostLogged && mostLogged.trend.length >= 2 && (
         <Card>

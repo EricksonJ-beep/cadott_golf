@@ -6,6 +6,7 @@ import { and, desc, eq, max, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { isHigherScoreBetter } from '@/lib/challenge-scoring'
 
 async function requireUser() {
   const session = await auth()
@@ -63,11 +64,16 @@ export async function getSeasonLeaderboard(challengeId: number) {
   const season = await getActiveSeason()
   if (!season) return []
 
-  return db
+  const challenge = await getChallenge(challengeId)
+  if (!challenge) return []
+  const higherIsBetter = isHigherScoreBetter(challenge)
+
+  const rows = await db
     .select({
       userId: challengeResults.userId,
       name: users.name,
-      bestScore: max(challengeResults.score).as('best_score'),
+      bestHigh: max(challengeResults.score).as('best_high'),
+      bestLow: sql<number>`min(${challengeResults.score})::int`.as('best_low'),
     })
     .from(challengeResults)
     .innerJoin(users, eq(users.id, challengeResults.userId))
@@ -78,12 +84,27 @@ export async function getSeasonLeaderboard(challengeId: number) {
       ),
     )
     .groupBy(challengeResults.userId, users.name)
-    .orderBy(desc(sql`best_score`))
-    .limit(5)
+
+  return rows
+    .map((row) => ({
+      userId: row.userId,
+      name: row.name,
+      bestScore: higherIsBetter ? row.bestHigh : row.bestLow,
+    }))
+    .sort((a, b) => {
+      const left = a.bestScore ?? 0
+      const right = b.bestScore ?? 0
+      return higherIsBetter ? right - left : left - right
+    })
+    .slice(0, 5)
 }
 
 export async function getAllTimeRecord(challengeId: number) {
-  const [record] = await db
+  const challenge = await getChallenge(challengeId)
+  if (!challenge) return null
+  const higherIsBetter = isHigherScoreBetter(challenge)
+
+  const baseQuery = db
     .select({
       score: challengeResults.score,
       dateLogged: challengeResults.dateLogged,
@@ -95,8 +116,10 @@ export async function getAllTimeRecord(challengeId: number) {
     .innerJoin(users, eq(users.id, challengeResults.userId))
     .leftJoin(seasons, eq(seasons.id, challengeResults.seasonId))
     .where(eq(challengeResults.challengeId, challengeId))
-    .orderBy(desc(challengeResults.score), challengeResults.dateLogged)
-    .limit(1)
+
+  const [record] = higherIsBetter
+    ? await baseQuery.orderBy(desc(challengeResults.score), challengeResults.dateLogged).limit(1)
+    : await baseQuery.orderBy(challengeResults.score, challengeResults.dateLogged).limit(1)
 
   return record ?? null
 }

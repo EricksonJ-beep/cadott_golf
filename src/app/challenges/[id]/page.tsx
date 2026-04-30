@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import LogResultForm from '@/components/challenges/LogResultForm'
 import Leaderboard from '@/components/challenges/Leaderboard'
+import { isHigherScoreBetter, pickBestScore } from '@/lib/challenge-scoring'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -52,7 +53,10 @@ export default async function ChallengeDetailPage({ params }: Props) {
     return String(n)
   }
 
-  const myBest = myResults.length > 0 ? Math.max(...myResults.map((r) => r.score)) : null
+  const myBest = pickBestScore(
+    myResults.map((r) => r.score),
+    isHigherScoreBetter(challenge),
+  )
 
   return (
     <div className="min-h-screen bg-white pb-10">

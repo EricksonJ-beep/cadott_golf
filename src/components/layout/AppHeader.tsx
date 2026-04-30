@@ -23,6 +23,11 @@ export default async function AppHeader() {
         <span className="font-bold text-base tracking-tight">Cadott Golf</span>
       </Link>
       <div className="flex items-center gap-3">
+        {session?.user?.role === 'coach' && (
+          <Link href="/admin" className="text-xs text-zinc-400 hover:text-white px-2">
+            Admin
+          </Link>
+        )}
         <span className="text-sm text-zinc-400 hidden sm:block">
           {session?.user?.name}
         </span>

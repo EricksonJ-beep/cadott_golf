@@ -1,9 +1,10 @@
-import { getRound } from '@/app/actions/rounds'
+import { getRound, deleteRound } from '@/app/actions/rounds'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 type Props = { params: Promise<{ id: string }> }
 

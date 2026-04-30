@@ -8,6 +8,7 @@ import {
   jsonb,
   serial,
   pgEnum,
+  real,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -163,6 +164,24 @@ export const roundHoles = pgTable('round_holes', {
   putts: integer('putts').notNull().default(0),
 })
 
+// ── Historical season stats (coach-entered pre-app data) ────────────────────
+export const historicalSeasonStats = pgTable('historical_season_stats', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  season: integer('season').notNull(), // e.g. 2024, 2025
+  holesPlayed: integer('holes_played').notNull(), // 9 or 18
+  roundsPlayed: integer('rounds_played'),
+  lowestScore: integer('lowest_score'),
+  averageScore: real('average_score'),
+  birdies: integer('birdies'),
+  eagles: integer('eagles'),
+  pars: integer('pars'),
+  bogeys: integer('bogeys'),
+  doubleBogeys: integer('double_bogeys'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
 // ── Stats chart preferences ───────────────────────────────────────────────────
 export const statsChartPreferences = pgTable('stats_chart_preferences', {
   id: serial('id').primaryKey(),
@@ -179,6 +198,11 @@ export const usersRelations = relations(users, ({ many }) => ({
   clubDistances: many(clubDistances),
   challengeResults: many(challengeResults),
   rounds: many(rounds),
+  historicalSeasonStats: many(historicalSeasonStats),
+}))
+
+export const historicalSeasonStatsRelations = relations(historicalSeasonStats, ({ one }) => ({
+  user: one(users, { fields: [historicalSeasonStats.userId], references: [users.id] }),
 }))
 
 export const seasonsRelations = relations(seasons, ({ many }) => ({

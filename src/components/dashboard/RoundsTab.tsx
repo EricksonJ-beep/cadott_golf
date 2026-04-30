@@ -20,8 +20,11 @@ export default async function RoundsTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Rounds</h2>
-        <Link href="/birdie-board" className="text-xs font-medium text-[#7a6200] underline">
-          Birdie Board →
+        <Link
+          href="/birdie-board"
+          className="inline-flex items-center gap-1.5 bg-[#FFD700] text-black text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#e6c200]"
+        >
+          🏆 Leaderboard
         </Link>
       </div>
 
@@ -72,6 +75,37 @@ export default async function RoundsTab() {
                 <Badge variant="outline">GIR {girPct}%</Badge>
               )}
             </div>
+            {(stats.holesOnPar3 > 0 || stats.holesOnPar4 > 0 || stats.holesOnPar5 > 0) && (
+              <div className="mt-4 border-t pt-3 grid grid-cols-3 gap-2 text-center">
+                {stats.holesOnPar3 > 0 && (
+                  <div>
+                    <div className="text-base font-bold tabular-nums">
+                      {stats.avgOnPar3 != null ? stats.avgOnPar3.toFixed(2) : '—'}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Avg Par 3</div>
+                    <div className="text-[9px] text-muted-foreground">+{stats.avgOnPar3 != null ? (stats.avgOnPar3 - 3).toFixed(2) : '—'}</div>
+                  </div>
+                )}
+                {stats.holesOnPar4 > 0 && (
+                  <div>
+                    <div className="text-base font-bold tabular-nums">
+                      {stats.avgOnPar4 != null ? stats.avgOnPar4.toFixed(2) : '—'}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Avg Par 4</div>
+                    <div className="text-[9px] text-muted-foreground">+{stats.avgOnPar4 != null ? (stats.avgOnPar4 - 4).toFixed(2) : '—'}</div>
+                  </div>
+                )}
+                {stats.holesOnPar5 > 0 && (
+                  <div>
+                    <div className="text-base font-bold tabular-nums">
+                      {stats.avgOnPar5 != null ? stats.avgOnPar5.toFixed(2) : '—'}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Avg Par 5</div>
+                    <div className="text-[9px] text-muted-foreground">+{stats.avgOnPar5 != null ? (stats.avgOnPar5 - 5).toFixed(2) : '—'}</div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

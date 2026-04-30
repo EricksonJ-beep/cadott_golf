@@ -11,8 +11,9 @@ import {
   clubDistances,
   playerClubs,
   clubsDefault,
+  historicalSeasonStats,
 } from '@/db/schema'
-import { desc, eq, isNotNull } from 'drizzle-orm'
+import { and, desc, eq, isNotNull } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -331,4 +332,86 @@ export async function deletePracticePlan(planId: number) {
   await db.update(practicePlans).set({ isActive: false }).where(eq(practicePlans.id, planId))
   revalidatePath('/dashboard')
   revalidatePath('/admin/practice-plans')
+}
+
+// ── Historical season stats ───────────────────────────────────────────────────
+
+export async function getPlayersBasic() {
+  await requireCoach()
+  return db
+    .select({ id: users.id, name: users.name, role: users.role })
+    .from(users)
+    .where(eq(users.isActive, true))
+    .orderBy(users.name)
+}
+
+export async function getHistoricalStatsForPlayer(userId: number) {
+  await requireCoach()
+  return db
+    .select()
+    .from(historicalSeasonStats)
+    .where(eq(historicalSeasonStats.userId, userId))
+    .orderBy(desc(historicalSeasonStats.season), historicalSeasonStats.holesPlayed)
+}
+
+export async function upsertHistoricalStats(prevState: string | null, formData: FormData) {
+  await requireCoach()
+
+  const userId = Number(formData.get('userId'))
+  const season = Number(formData.get('season'))
+  const holesPlayed = Number(formData.get('holesPlayed'))
+
+  if (!userId || !season || ![9, 18].includes(holesPlayed)) return 'Invalid player, season, or holes.'
+
+  const parse = (key: string) => {
+    const v = formData.get(key)
+    if (v === null || v === '') return null
+    const n = Number(v)
+    return isNaN(n) ? null : n
+  }
+
+  const values = {
+    userId,
+    season,
+    holesPlayed,
+    roundsPlayed: parse('roundsPlayed'),
+    lowestScore: parse('lowestScore'),
+    averageScore: parse('averageScore') as number | null,
+    birdies: parse('birdies'),
+    eagles: parse('eagles'),
+    pars: parse('pars'),
+    bogeys: parse('bogeys'),
+    doubleBogeys: parse('doubleBogeys'),
+    notes: (formData.get('notes') as string)?.trim() || null,
+  }
+
+  const existing = await db
+    .select({ id: historicalSeasonStats.id })
+    .from(historicalSeasonStats)
+    .where(
+      and(
+        eq(historicalSeasonStats.userId, userId),
+        eq(historicalSeasonStats.season, season),
+        eq(historicalSeasonStats.holesPlayed, holesPlayed),
+      ),
+    )
+    .limit(1)
+
+  if (existing.length > 0) {
+    await db
+      .update(historicalSeasonStats)
+      .set(values)
+      .where(eq(historicalSeasonStats.id, existing[0].id))
+  } else {
+    await db.insert(historicalSeasonStats).values(values)
+  }
+
+  revalidatePath('/admin/history')
+  return null
+}
+
+export async function deleteHistoricalStats(id: number) {
+  await requireCoach()
+  await db.delete(historicalSeasonStats).where(eq(historicalSeasonStats.id, id))
+  revalidatePath('/admin/history')
 }

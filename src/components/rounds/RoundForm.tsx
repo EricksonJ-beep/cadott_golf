@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useMemo, useState } from 'react'
-import { saveRound } from '@/app/actions/rounds'
+import { saveRound, updateRound } from '@/app/actions/rounds'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +17,16 @@ type Hole = {
   putts: number
 }
 
+type InitialData = {
+  roundId: number
+  courseName: string
+  date: string
+  holesPlayed: 9 | 18
+  holes: Hole[]
+  weatherNotes: string | null
+  freeTextNotes: string | null
+}
+
 function defaultHoles(count: number): Hole[] {
   return Array.from({ length: count }, (_, i) => ({
     holeNumber: i + 1,
@@ -28,10 +38,12 @@ function defaultHoles(count: number): Hole[] {
   }))
 }
 
-export default function RoundForm() {
-  const [error, action, pending] = useActionState(saveRound, null)
-  const [holesCount, setHolesCount] = useState<9 | 18>(18)
-  const [holes, setHoles] = useState<Hole[]>(defaultHoles(18))
+export default function RoundForm({ initialData }: { initialData?: InitialData }) {
+  const isEdit = !!initialData
+  const boundAction = isEdit ? updateRound.bind(null, initialData!.roundId) : saveRound
+  const [error, action, pending] = useActionState(boundAction, null)
+  const [holesCount, setHolesCount] = useState<9 | 18>(initialData?.holesPlayed ?? 18)
+  const [holes, setHoles] = useState<Hole[]>(initialData?.holes ?? defaultHoles(18))
 
   function changeHolesCount(n: 9 | 18) {
     setHolesCount(n)
@@ -73,6 +85,7 @@ export default function RoundForm() {
               name="courseName"
               required
               placeholder="Whispering Pines"
+              defaultValue={initialData?.courseName ?? ''}
               className="h-12 text-base"
             />
           </div>
@@ -83,7 +96,7 @@ export default function RoundForm() {
                 id="date"
                 name="date"
                 type="date"
-                defaultValue={today}
+                defaultValue={initialData?.date ?? today}
                 required
                 className="h-12 text-base"
               />
@@ -143,6 +156,7 @@ export default function RoundForm() {
               id="weatherNotes"
               name="weatherNotes"
               placeholder="Sunny, light wind"
+              defaultValue={initialData?.weatherNotes ?? ''}
               className="h-11"
             />
           </div>
@@ -153,6 +167,7 @@ export default function RoundForm() {
               name="freeTextNotes"
               rows={3}
               placeholder="Anything memorable from the round…"
+              defaultValue={initialData?.freeTextNotes ?? ''}
               className="text-sm"
             />
           </div>
@@ -178,7 +193,7 @@ export default function RoundForm() {
             disabled={pending}
             className="flex-1 h-12 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold"
           >
-            {pending ? 'Saving…' : 'Save Round'}
+            {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Save Round'}
           </Button>
         </div>
       </div>

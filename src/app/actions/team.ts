@@ -82,6 +82,9 @@ export async function getPlayerSummary(userId: number) {
       fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.par} > 3)::int`,
       girHit: sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
       totalHoles: sql<number>`count(${roundHoles.id})::int`,
+      avgOnPar3: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 3)::float`,
+      avgOnPar4: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 4)::float`,
+      avgOnPar5: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 5)::float`,
     })
     .from(rounds)
     .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))

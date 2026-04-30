@@ -21,7 +21,7 @@ export default async function BirdieBoardPage({ searchParams }: Props) {
     ? { ...(await getAllTimeBoard()), seasonName: null }
     : await getSeasonBoard()
 
-  const heading = isAllTime ? 'All-Time' : seasonName ?? 'Season'
+  const heading = isAllTime ? 'All-Time Leaderboard' : `${seasonName ?? 'Season'} Leaderboard`
 
   return (
     <div className="min-h-screen bg-white pb-10">
@@ -29,7 +29,7 @@ export default async function BirdieBoardPage({ searchParams }: Props) {
         <Link href="/dashboard?tab=rounds" className="text-[#FFD700] text-sm font-medium">
           ← Back
         </Link>
-        <span className="text-sm font-medium">Birdie Board</span>
+        <span className="text-sm font-medium">Leaderboard</span>
       </header>
 
       <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">

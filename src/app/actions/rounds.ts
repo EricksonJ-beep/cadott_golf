@@ -132,6 +132,58 @@ export async function deleteRound(roundId: number) {
   revalidatePath('/dashboard')
 }
 
+export async function updateRound(roundId: number, _prevState: string | null, formData: FormData) {
+  const session = await requireUser()
+
+  const [existing] = await db.select().from(rounds).where(eq(rounds.id, roundId)).limit(1)
+  if (!existing) return 'Round not found.'
+  if (existing.userId !== Number(session.user!.id) && session.user!.role !== 'coach') return 'Not allowed.'
+
+  const courseName = ((formData.get('courseName') as string) || '').trim()
+  const date = (formData.get('date') as string) || ''
+  const holesPlayed = Number(formData.get('holesPlayed'))
+  const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
+  const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
+  const holesJson = formData.get('holes') as string
+
+  if (!courseName) return 'Course name is required.'
+  if (!date) return 'Date is required.'
+  if (holesPlayed !== 9 && holesPlayed !== 18) return 'Holes must be 9 or 18.'
+
+  let holes: HoleInput[] = []
+  try {
+    holes = JSON.parse(holesJson || '[]')
+  } catch {
+    return 'Invalid hole data.'
+  }
+  if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
+  for (const h of holes) {
+    if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
+    if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
+    if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
+  }
+
+  const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
+
+  await db.update(rounds).set({ courseName, date, holesPlayed, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
+  await db.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
+  await db.insert(roundHoles).values(
+    holes.map((h) => ({
+      roundId,
+      holeNumber: h.holeNumber,
+      par: h.par,
+      score: h.score,
+      fairwayHit: h.fairwayHit,
+      gir: h.gir,
+      putts: h.putts,
+    })),
+  )
+
+  revalidatePath('/dashboard')
+  revalidatePath(`/rounds/${roundId}`)
+  redirect(`/rounds/${roundId}`)
+}
+
 export async function getMyCourseStats() {
   const session = await requireUser()
   const userId = Number(session.user!.id)
@@ -150,6 +202,13 @@ export async function getMyCourseStats() {
       fairwaysHit: sql<number>`count(*) filter (where ${roundHoles.fairwayHit} = true)::int`,
       fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.par} > 3)::int`,
       girHit: sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
+      // Per-par scoring averages
+      avgOnPar3: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 3)::float`,
+      avgOnPar4: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 4)::float`,
+      avgOnPar5: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 5)::float`,
+      holesOnPar3: sql<number>`count(*) filter (where ${roundHoles.par} = 3)::int`,
+      holesOnPar4: sql<number>`count(*) filter (where ${roundHoles.par} = 4)::int`,
+      holesOnPar5: sql<number>`count(*) filter (where ${roundHoles.par} = 5)::int`,
     })
     .from(rounds)
     .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))

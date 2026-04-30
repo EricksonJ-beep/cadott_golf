@@ -30,11 +30,16 @@ declare module 'next-auth/jwt' {
 export const authConfig: NextAuthConfig = {
   providers: [], // populated in auth.ts (Node runtime)
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id!
         token.role = user.role
         token.mustChangePassword = user.mustChangePassword
+      }
+      if (trigger === 'update' && session?.user) {
+        if (typeof session.user.mustChangePassword === 'boolean') {
+          token.mustChangePassword = session.user.mustChangePassword
+        }
       }
       return token
     },

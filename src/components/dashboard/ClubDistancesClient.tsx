@@ -263,6 +263,7 @@ function EditClubModal({
                 <div className="space-y-1">
                   <Label htmlFor="carryYards">Carry (yds)</Label>
                   <Input
+                    key={`carry-${swingType}`}
                     id="carryYards"
                     name="carryYards"
                     type="number"
@@ -274,6 +275,7 @@ function EditClubModal({
                 <div className="space-y-1">
                   <Label htmlFor="totalYards">Total (yds)</Label>
                   <Input
+                    key={`total-${swingType}`}
                     id="totalYards"
                     name="totalYards"
                     type="number"

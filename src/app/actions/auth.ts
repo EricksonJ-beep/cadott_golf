@@ -1,6 +1,6 @@
 'use server'
 
-import { signIn, signOut } from '@/lib/auth'
+import { signIn, signOut, unstable_update } from '@/lib/auth'
 import { AuthError } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/db'
@@ -48,6 +48,8 @@ export async function changePassword(_prevState: string | null, formData: FormDa
     .update(users)
     .set({ passwordHash: hash, mustChangePassword: false })
     .where(eq(users.id, parseInt(session.user.id)))
+
+  await unstable_update({ user: { mustChangePassword: false } })
 
   redirect('/dashboard')
 }

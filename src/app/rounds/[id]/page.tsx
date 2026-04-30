@@ -39,6 +39,13 @@ export default async function RoundDetailPage({ params }: Props) {
   const fwyHit = round.holes.filter((h) => h.fairwayHit === true).length
   const girHit = round.holes.filter((h) => h.gir).length
   const totalDiff = (round.totalScore ?? 0) - totalPar
+  const canEdit = round.userId === Number(session.user!.id) || session.user!.role === 'coach'
+
+  async function handleDelete() {
+    'use server'
+    await deleteRound(round!.id)
+    redirect('/dashboard?tab=rounds')
+  }
 
   return (
     <div className="min-h-screen bg-white pb-10">
@@ -50,13 +57,35 @@ export default async function RoundDetailPage({ params }: Props) {
       </header>
 
       <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
-        <div>
-          <h1 className="text-xl font-bold">{round.courseName}</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date(round.date).toLocaleDateString(undefined, {
-              weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-            })}
-          </p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h1 className="text-xl font-bold">{round.courseName}</h1>
+            <p className="text-sm text-muted-foreground">
+              {new Date(round.date).toLocaleDateString(undefined, {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+              })}
+            </p>
+          </div>
+          {canEdit && (
+            <div className="flex gap-2 shrink-0">
+              <Link href={`/rounds/${round.id}/edit`}>
+                <Button variant="outline" size="sm" className="h-8 text-xs">Edit</Button>
+              </Link>
+              <form action={handleDelete}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={(e) => {
+                    if (!confirm('Delete this round? This cannot be undone.')) e.preventDefault()
+                  }}
+                >
+                  Delete
+                </Button>
+              </form>
+            </div>
+          )}
         </div>
 
         <Card>

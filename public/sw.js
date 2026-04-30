@@ -1,8 +1,7 @@
-const CACHE_NAME = 'cadott-golf-v2'
+const CACHE_NAME = 'cadott-golf-v4'
 
 const PRECACHE_URLS = [
   '/',
-  '/dashboard',
 ]
 
 self.addEventListener('install', (event) => {
@@ -19,24 +18,4 @@ self.addEventListener('activate', (event) => {
     )
   )
   self.clients.claim()
-})
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
-          }
-          return response
-        })
-        .catch(() => cached)
-
-      return cached || networkFetch
-    })
-  )
 })

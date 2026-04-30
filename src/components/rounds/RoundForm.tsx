@@ -72,7 +72,7 @@ export default function RoundForm() {
               id="courseName"
               name="courseName"
               required
-              placeholder="Cadott Country Club"
+              placeholder="Whispering Pines"
               className="h-12 text-base"
             />
           </div>

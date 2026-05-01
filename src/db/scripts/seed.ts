@@ -30,22 +30,6 @@ const DEFAULT_CLUBS = [
 
 const PLACEHOLDER_CHALLENGES = [
   {
-    name: '10 from 5 Feet',
-    type: 'range' as const,
-    category: 'putting' as const,
-    scoringType: 'score_out_of' as const,
-    maxScore: 10,
-    description: 'Hit 10 putts from 5 feet. Count how many you make. Your score is makes out of 10.',
-  },
-  {
-    name: 'Chip & Stick',
-    type: 'range' as const,
-    category: 'chipping' as const,
-    scoringType: 'score_out_of' as const,
-    maxScore: 10,
-    description: 'Chip 10 balls from off the green. Score = number that finish within 6 feet of the hole.',
-  },
-  {
     name: 'Up & Down Streak',
     type: 'range' as const,
     category: 'chipping' as const,
@@ -67,6 +51,13 @@ const PLACEHOLDER_CHALLENGES = [
     scoringType: 'score_out_of' as const,
     maxScore: 9,
     description: 'Chip from 5 different locations around the green. After each chip, putt out. Your total stroke count must be 9 or fewer to pass — and at least one chip must be holed out. Score is your total strokes (lower is better).',
+  },
+  {
+    name: '5 Foot Drill',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'makes_in_a_row' as const,
+    description: 'Hit 5-foot putts and count how many you can make in a row. Score is your longest consecutive streak.',
   },
   {
     name: '100-Foot Drill',
@@ -101,36 +92,6 @@ const PLACEHOLDER_CHALLENGES = [
     description: 'Start at 10 feet and move back 5 feet at a time. Keep putting from increasing distances until you 3-putt. Score is the farthest distance reached.',
   },
   {
-    name: 'Longest Drive',
-    type: 'range' as const,
-    category: 'driving' as const,
-    scoringType: 'count' as const,
-    unit: 'yards',
-    description: 'Hit a measured drive. Log the carry distance in yards. Your best ever stays as the all-time record.',
-  },
-  {
-    name: 'Fairways in a Row',
-    type: 'range' as const,
-    category: 'driving' as const,
-    scoringType: 'makes_in_a_row' as const,
-    description: 'Hit consecutive fairways on the range. A fairway is defined as landing between the Yellow and Green flags. Score is your longest streak before a miss.',
-  },
-  {
-    name: '200 Yard Fairway Challenge',
-    type: 'range' as const,
-    category: 'driving' as const,
-    scoringType: 'makes_in_a_row' as const,
-    description: 'Using any club, hit shots that land in the fairway (between the Yellow and Green flags) AND carry between 180–220 yards. Both conditions must be met to count. Score is your longest streak of consecutive qualifying shots.',
-  },
-  {
-    name: 'Fairways out of 10',
-    type: 'range' as const,
-    category: 'driving' as const,
-    scoringType: 'score_out_of' as const,
-    maxScore: 10,
-    description: 'Hit 10 drives at a fairway target. Score = number that land in the fairway.',
-  },
-  {
     name: 'Red Flag Challenge',
     type: 'range' as const,
     category: 'approach' as const,
@@ -155,11 +116,27 @@ const PLACEHOLDER_CHALLENGES = [
     description: 'Hit 10 shots to the green flag on the range. Ball must hit or come to rest on the raised green to count. Score is out of 10.',
   },
   {
-    name: '5 in a Row from 3 Feet',
+    name: 'Fairways in a Row',
     type: 'range' as const,
-    category: 'putting' as const,
-    scoringType: 'pass_fail' as const,
-    description: 'Make 5 consecutive putts from 3 feet. Pass if you make all 5 in a row. If you miss, start over.',
+    category: 'driving' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 shots at a fairway target on the range. A fairway is defined as landing between the Yellow and Green flags. Score is total fairways hit out of 10.',
+  },
+  {
+    name: '200 Yard Fairway Challenge',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'makes_in_a_row' as const,
+    description: 'Using any club, hit shots that land in the fairway (between the Yellow and Green flags) AND carry between 180–220 yards. Both conditions must be met to count. Score is your longest streak of consecutive qualifying shots.',
+  },
+  {
+    name: '14 out of 14 Challenge',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 14,
+    description: 'Simulate a full round of tee shots on the range. Hit 8 drivers, 4 fairway woods (3-wood or other woods), and 2 hybrids or long irons — in any order. Count how many land in the fairway out of 14. Can you go 14 for 14?',
   },
 ]
 

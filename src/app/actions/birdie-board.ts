@@ -109,7 +109,21 @@ async function getChallengeLeaderboards(seasonId: number | null): Promise<Challe
     })
     .from(challenges)
     .where(eq(challenges.isActive, true))
-    .orderBy(challenges.category, challenges.name)
+    .orderBy(
+      challenges.category,
+      sql<number>`case
+        when ${challenges.name} = 'Up & Down Streak' then 0
+        when ${challenges.name} = 'Chip Ladder' then 1
+        when ${challenges.name} = '5 in 9 Drill' then 2
+        when ${challenges.name} = '5 Foot Drill' then 0
+        when ${challenges.name} = '100-Foot Drill' then 1
+        when ${challenges.name} = 'Red Flag Challenge' then 0
+        when ${challenges.name} = 'Yellow Flag Challenge' then 1
+        when ${challenges.name} = 'Green Flag Challenge' then 2
+        else 99
+      end`,
+      challenges.name,
+    )
 
   const whereClause =
     seasonId === null

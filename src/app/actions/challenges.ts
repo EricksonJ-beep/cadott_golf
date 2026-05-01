@@ -30,7 +30,22 @@ export async function getActiveChallenges() {
     .select()
     .from(challenges)
     .where(eq(challenges.isActive, true))
-    .orderBy(desc(challenges.isFeatured), challenges.category, challenges.name)
+    .orderBy(
+      desc(challenges.isFeatured),
+      challenges.category,
+      sql<number>`case
+        when ${challenges.name} = 'Up & Down Streak' then 0
+        when ${challenges.name} = 'Chip Ladder' then 1
+        when ${challenges.name} = '5 in 9 Drill' then 2
+        when ${challenges.name} = '5 Foot Drill' then 0
+        when ${challenges.name} = '100-Foot Drill' then 1
+        when ${challenges.name} = 'Red Flag Challenge' then 0
+        when ${challenges.name} = 'Yellow Flag Challenge' then 1
+        when ${challenges.name} = 'Green Flag Challenge' then 2
+        else 99
+      end`,
+      challenges.name,
+    )
 }
 
 export async function getAllChallenges() {
@@ -38,7 +53,23 @@ export async function getAllChallenges() {
   return db
     .select()
     .from(challenges)
-    .orderBy(challenges.isActive, desc(challenges.isFeatured), challenges.category, challenges.name)
+    .orderBy(
+      challenges.isActive,
+      desc(challenges.isFeatured),
+      challenges.category,
+      sql<number>`case
+        when ${challenges.name} = 'Up & Down Streak' then 0
+        when ${challenges.name} = 'Chip Ladder' then 1
+        when ${challenges.name} = '5 in 9 Drill' then 2
+        when ${challenges.name} = '5 Foot Drill' then 0
+        when ${challenges.name} = '100-Foot Drill' then 1
+        when ${challenges.name} = 'Red Flag Challenge' then 0
+        when ${challenges.name} = 'Yellow Flag Challenge' then 1
+        when ${challenges.name} = 'Green Flag Challenge' then 2
+        else 99
+      end`,
+      challenges.name,
+    )
 }
 
 export async function getChallenge(id: number) {

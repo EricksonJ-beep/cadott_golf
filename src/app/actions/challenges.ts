@@ -30,7 +30,7 @@ export async function getActiveChallenges() {
     .select()
     .from(challenges)
     .where(eq(challenges.isActive, true))
-    .orderBy(challenges.category, challenges.name)
+    .orderBy(desc(challenges.isFeatured), challenges.category, challenges.name)
 }
 
 export async function getAllChallenges() {
@@ -38,7 +38,7 @@ export async function getAllChallenges() {
   return db
     .select()
     .from(challenges)
-    .orderBy(challenges.isActive, challenges.category, challenges.name)
+    .orderBy(challenges.isActive, desc(challenges.isFeatured), challenges.category, challenges.name)
 }
 
 export async function getChallenge(id: number) {
@@ -187,6 +187,7 @@ export async function createChallenge(_prevState: string | null, formData: FormD
     | 'score_out_of' | 'makes_in_a_row' | 'pass_fail' | 'count'
   const unit = ((formData.get('unit') as string) || '').trim() || null
   const description = ((formData.get('description') as string) || '').trim() || null
+  const isFeatured = formData.get('isFeatured') === 'on'
   const maxScoreRaw = formData.get('maxScore') as string
   const maxScore = maxScoreRaw ? Number(maxScoreRaw) : null
 
@@ -201,6 +202,7 @@ export async function createChallenge(_prevState: string | null, formData: FormD
     unit,
     description,
     maxScore,
+    isFeatured,
     createdBy: Number(session.user!.id),
   })
 
@@ -234,6 +236,13 @@ export async function updateChallenge(_prevState: string | null, formData: FormD
 export async function toggleChallengeActive(challengeId: number, isActive: boolean) {
   await requireCoach()
   await db.update(challenges).set({ isActive }).where(eq(challenges.id, challengeId))
+  revalidatePath('/admin/challenges')
+  revalidatePath('/dashboard')
+}
+
+export async function toggleChallengeFeatured(challengeId: number, isFeatured: boolean) {
+  await requireCoach()
+  await db.update(challenges).set({ isFeatured }).where(eq(challenges.id, challengeId))
   revalidatePath('/admin/challenges')
   revalidatePath('/dashboard')
 }

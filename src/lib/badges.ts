@@ -1,4 +1,11 @@
-export type BadgeGroup = 'scoring_18' | 'scoring_9' | 'pars' | 'birdies' | 'feats'
+export type BadgeGroup =
+  | 'scoring_18'
+  | 'scoring_9'
+  | 'pars'
+  | 'birdies'
+  | 'participation'
+  | 'streaks'
+  | 'feats'
 
 export type BadgeDef = {
   id: string
@@ -29,8 +36,20 @@ export const BADGE_DEFS: BadgeDef[] = [
 
   // Birdies in a round
   { id: 'one_birdie',    name: 'Birdie',     emoji: '🐦', description: 'Make a birdie in a round',           group: 'birdies' },
-  { id: 'two_birdies',   name: '2 Birdies',  emoji: '🐦', description: 'Make 2 birdies in a single round',   group: 'birdies' },
-  { id: 'three_birdies', name: '3 Birdies',  emoji: '🐦', description: 'Make 3 birdies in a single round',   group: 'birdies' },
+  { id: 'two_birdies',   name: '2 Birdies',  emoji: '🕊️', description: 'Make 2 birdies in a single round',   group: 'birdies' },
+  { id: 'three_birdies', name: '3 Birdies',  emoji: '🦜', description: 'Make 3 birdies in a single round',   group: 'birdies' },
+
+  // Participation
+  { id: 'rounds_5',  name: '5 Rounds Logged',   emoji: '🗓️', description: 'Log 5 rounds',  group: 'participation' },
+  { id: 'rounds_10', name: '10 Rounds Logged',  emoji: '📘', description: 'Log 10 rounds', group: 'participation' },
+  { id: 'rounds_20', name: '20 Rounds Logged',  emoji: '📗', description: 'Log 20 rounds', group: 'participation' },
+  { id: 'rounds_30', name: '30 Rounds Logged',  emoji: '📕', description: 'Log 30 rounds', group: 'participation' },
+
+  // Streaks
+  { id: 'birdie_streak_2', name: 'Birdie Streak x2', emoji: '🔥', description: 'Record a birdie in 2 straight rounds', group: 'streaks' },
+  { id: 'birdie_streak_3', name: 'Birdie Streak x3', emoji: '🚀', description: 'Record a birdie in 3 straight rounds', group: 'streaks' },
+  { id: 'par_streak_3',    name: 'Par Streak x3',    emoji: '⚡', description: 'Make at least one par in 3 straight rounds', group: 'streaks' },
+  { id: 'par_streak_5',    name: 'Par Streak x5',    emoji: '🌟', description: 'Make at least one par in 5 straight rounds', group: 'streaks' },
 
   // Single feats
   { id: 'eagle',           name: 'Eagle',           emoji: '🦅', description: 'Make an eagle (or better)',        group: 'feats' },
@@ -99,6 +118,28 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     if (eagles >= 1) award('eagle', r.date)
     if (maxPutts < 3) award('no_three_putts', r.date)
     if (doubles === 0) award('no_double_bogeys', r.date)
+  }
+
+  // Participation milestones
+  if (sorted.length >= 5) award('rounds_5', sorted[4].date)
+  if (sorted.length >= 10) award('rounds_10', sorted[9].date)
+  if (sorted.length >= 20) award('rounds_20', sorted[19].date)
+  if (sorted.length >= 30) award('rounds_30', sorted[29].date)
+
+  // Streak milestones by round sequence
+  let birdieRun = 0
+  let parRun = 0
+  for (const r of sorted) {
+    const birdies = r.holes.filter((h) => h.score - h.par === -1).length
+    const pars = r.holes.filter((h) => h.score === h.par).length
+
+    birdieRun = birdies >= 1 ? birdieRun + 1 : 0
+    parRun = pars >= 1 ? parRun + 1 : 0
+
+    if (birdieRun >= 2) award('birdie_streak_2', r.date)
+    if (birdieRun >= 3) award('birdie_streak_3', r.date)
+    if (parRun >= 3) award('par_streak_3', r.date)
+    if (parRun >= 5) award('par_streak_5', r.date)
   }
 
   return earned

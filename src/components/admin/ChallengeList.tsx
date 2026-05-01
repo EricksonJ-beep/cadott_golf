@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { toggleChallengeActive } from '@/app/actions/challenges'
+import { toggleChallengeActive, toggleChallengeFeatured } from '@/app/actions/challenges'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +15,7 @@ type Challenge = {
   maxScore: number | null
   unit: string | null
   description: string | null
+  isFeatured: boolean
   isActive: boolean
 }
 
@@ -55,6 +56,11 @@ export default function ChallengeList({ challenges }: { challenges: Challenge[] 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-semibold text-sm">{c.name}</p>
+                  {c.isFeatured && (
+                    <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-900">
+                      Featured
+                    </Badge>
+                  )}
                   {!c.isActive && (
                     <Badge variant="outline" className="text-[10px]">
                       Inactive
@@ -80,17 +86,30 @@ export default function ChallengeList({ challenges }: { challenges: Challenge[] 
                   </p>
                 )}
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(() => toggleChallengeActive(c.id, !c.isActive))
-                }
-                className="text-xs shrink-0"
-              >
-                {c.isActive ? 'Deactivate' : 'Reactivate'}
-              </Button>
+              <div className="flex flex-col gap-1 shrink-0">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(() => toggleChallengeFeatured(c.id, !c.isFeatured))
+                  }
+                  className="text-xs"
+                >
+                  {c.isFeatured ? 'Unfeature' : 'Feature'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(() => toggleChallengeActive(c.id, !c.isActive))
+                  }
+                  className="text-xs"
+                >
+                  {c.isActive ? 'Deactivate' : 'Reactivate'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

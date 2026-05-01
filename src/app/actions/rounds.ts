@@ -67,6 +67,8 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
   const courseName = ((formData.get('courseName') as string) || '').trim()
   const date = (formData.get('date') as string) || ''
   const holesPlayed = Number(formData.get('holesPlayed'))
+  const teeColor = ((formData.get('teeColor') as string) || '').trim() || null
+  const roundSegment = ((formData.get('roundSegment') as string) || '').trim() || null
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
   const holesJson = formData.get('holes') as string
@@ -99,6 +101,8 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
       date,
       courseName,
       holesPlayed,
+      teeColor,
+      roundSegment,
       totalScore,
       weatherNotes,
       freeTextNotes,
@@ -142,6 +146,8 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   const courseName = ((formData.get('courseName') as string) || '').trim()
   const date = (formData.get('date') as string) || ''
   const holesPlayed = Number(formData.get('holesPlayed'))
+  const teeColor = ((formData.get('teeColor') as string) || '').trim() || null
+  const roundSegment = ((formData.get('roundSegment') as string) || '').trim() || null
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
   const holesJson = formData.get('holes') as string
@@ -165,7 +171,7 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
 
   const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
 
-  await db.update(rounds).set({ courseName, date, holesPlayed, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
+  await db.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
   await db.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
   await db.insert(roundHoles).values(
     holes.map((h) => ({

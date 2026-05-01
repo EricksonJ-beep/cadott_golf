@@ -209,3 +209,181 @@ export async function getMyBadges(): Promise<EarnedMap> {
   const earned = computeEarnedBadges(forBadges)
   return earned
 }
+
+type RoundStreakRow = {
+  date: string
+  totalScore: number
+  netToPar: number
+  hasPar: boolean
+  hasBirdie: boolean
+}
+
+function startOfWeekMonday(date: Date): Date {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  const day = d.getUTCDay() // 0=Sun, 1=Mon, ...
+  const diff = day === 0 ? -6 : 1 - day
+  d.setUTCDate(d.getUTCDate() + diff)
+  return d
+}
+
+export async function getMyStreaks() {
+  const session = await requireUser()
+  const userId = Number(session.user!.id)
+
+  const userRounds = await db
+    .select({
+      id: rounds.id,
+      date: rounds.date,
+      totalScore: rounds.totalScore,
+    })
+    .from(rounds)
+    .where(eq(rounds.userId, userId))
+    .orderBy(asc(rounds.date), asc(rounds.id))
+
+  if (userRounds.length === 0) {
+    return {
+      roundsLogged: 0,
+      currentWeeklyPlayStreak: 0,
+      bestWeeklyPlayStreak: 0,
+      currentBirdieRoundStreak: 0,
+      bestBirdieRoundStreak: 0,
+      currentParRoundStreak: 0,
+      bestParRoundStreak: 0,
+      currentImprovementStreak: 0,
+      bestImprovementStreak: 0,
+    }
+  }
+
+  const roundIds = userRounds.map((r) => r.id)
+  const holes = await db
+    .select({
+      roundId: roundHoles.roundId,
+      par: roundHoles.par,
+      score: roundHoles.score,
+    })
+    .from(roundHoles)
+    .where(inArray(roundHoles.roundId, roundIds))
+
+  const holesByRound = new Map<number, { par: number; score: number }[]>()
+  for (const h of holes) {
+    if (!holesByRound.has(h.roundId)) holesByRound.set(h.roundId, [])
+    holesByRound.get(h.roundId)!.push({ par: h.par, score: h.score })
+  }
+
+  const rows: RoundStreakRow[] = userRounds
+    .map((r) => {
+      const hs = holesByRound.get(r.id) ?? []
+      const totalScore = r.totalScore ?? hs.reduce((sum, h) => sum + h.score, 0)
+      return {
+        date: String(r.date),
+        totalScore,
+        netToPar: totalScore - hs.reduce((sum, h) => sum + h.par, 0),
+        hasPar: hs.some((h) => h.score === h.par),
+        hasBirdie: hs.some((h) => h.score - h.par === -1),
+      }
+    })
+    .filter((r) => Number.isFinite(r.totalScore))
+
+  // Weekly play streak (at least one round in consecutive weeks)
+  const weekKeys = Array.from(
+    new Set(
+      rows.map((r) => startOfWeekMonday(new Date(`${r.date}T00:00:00.000Z`)).toISOString().slice(0, 10)),
+    ),
+  ).sort()
+
+  let bestWeeklyPlayStreak = 0
+  let currentWeeklyPlayStreak = 0
+  let weeklyRun = 0
+  for (let i = 0; i < weekKeys.length; i++) {
+    if (i === 0) {
+      weeklyRun = 1
+    } else {
+      const prev = new Date(`${weekKeys[i - 1]}T00:00:00.000Z`)
+      const curr = new Date(`${weekKeys[i]}T00:00:00.000Z`)
+      const days = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24))
+      weeklyRun = days === 7 ? weeklyRun + 1 : 1
+    }
+    bestWeeklyPlayStreak = Math.max(bestWeeklyPlayStreak, weeklyRun)
+  }
+
+  const thisWeek = startOfWeekMonday(new Date()).toISOString().slice(0, 10)
+  const lastWeek = new Date(`${thisWeek}T00:00:00.000Z`)
+  lastWeek.setUTCDate(lastWeek.getUTCDate() - 7)
+  const lastWeekKey = lastWeek.toISOString().slice(0, 10)
+
+  if (weekKeys.length > 0) {
+    const lastLoggedWeek = weekKeys[weekKeys.length - 1]
+    if (lastLoggedWeek === thisWeek || lastLoggedWeek === lastWeekKey) {
+      let idx = weekKeys.length - 1
+      currentWeeklyPlayStreak = 1
+      while (idx > 0) {
+        const prev = new Date(`${weekKeys[idx - 1]}T00:00:00.000Z`)
+        const curr = new Date(`${weekKeys[idx]}T00:00:00.000Z`)
+        const days = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24))
+        if (days !== 7) break
+        currentWeeklyPlayStreak += 1
+        idx -= 1
+      }
+    }
+  }
+
+  let currentBirdieRoundStreak = 0
+  let bestBirdieRoundStreak = 0
+  let currentParRoundStreak = 0
+  let bestParRoundStreak = 0
+  let currentImprovementStreak = 0
+  let bestImprovementStreak = 0
+
+  let birdieRun = 0
+  let parRun = 0
+  let improvementRun = 0
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    birdieRun = row.hasBirdie ? birdieRun + 1 : 0
+    parRun = row.hasPar ? parRun + 1 : 0
+
+    if (i === 0) {
+      improvementRun = 1
+    } else {
+        improvementRun = row.netToPar <= rows[i - 1].netToPar ? improvementRun + 1 : 1
+    }
+
+    bestBirdieRoundStreak = Math.max(bestBirdieRoundStreak, birdieRun)
+    bestParRoundStreak = Math.max(bestParRoundStreak, parRun)
+    bestImprovementStreak = Math.max(bestImprovementStreak, improvementRun)
+  }
+
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (!rows[i].hasBirdie) break
+    currentBirdieRoundStreak += 1
+  }
+
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (!rows[i].hasPar) break
+    currentParRoundStreak += 1
+  }
+
+  if (rows.length > 0) {
+    currentImprovementStreak = 1
+    for (let i = rows.length - 1; i > 0; i--) {
+        if (rows[i].netToPar <= rows[i - 1].netToPar) {
+        currentImprovementStreak += 1
+      } else {
+        break
+      }
+    }
+  }
+
+  return {
+    roundsLogged: rows.length,
+    currentWeeklyPlayStreak,
+    bestWeeklyPlayStreak,
+    currentBirdieRoundStreak,
+    bestBirdieRoundStreak,
+    currentParRoundStreak,
+    bestParRoundStreak,
+    currentImprovementStreak,
+    bestImprovementStreak,
+  }
+}

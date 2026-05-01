@@ -35,6 +35,12 @@ npm run db:seed       # seed default clubs + coach account
 npm run dev
 ```
 
+For a one-command fresh bootstrap plus production build:
+
+```bash
+npm run build:fresh    # db push + seed + next build
+```
+
 Open http://localhost:3000.
 
 ## Phase status

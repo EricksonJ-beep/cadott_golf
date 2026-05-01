@@ -121,6 +121,7 @@ export const challenges = pgTable('challenges', {
   unit: text('unit'),
   description: text('description'),
   maxScore: integer('max_score'),
+  isFeatured: boolean('is_featured').notNull().default(false),
   isActive: boolean('is_active').notNull().default(true),
   createdBy: integer('created_by').references(() => users.id),
 })
@@ -145,6 +146,8 @@ export const rounds = pgTable('rounds', {
   date: date('date').notNull(),
   courseName: text('course_name').notNull(),
   holesPlayed: integer('holes_played').notNull().default(18),
+  teeColor: text('tee_color'),
+  roundSegment: text('round_segment'),
   totalScore: integer('total_score'),
   weatherNotes: text('weather_notes'),
   freeTextNotes: text('free_text_notes'),

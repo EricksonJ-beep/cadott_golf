@@ -6,10 +6,20 @@ const GROUP_LABELS: Record<BadgeGroup, string> = {
   scoring_9: '9-Hole Scoring',
   pars: 'Pars in a Round',
   birdies: 'Birdies in a Round',
+  participation: 'Participation',
+  streaks: 'Streak Milestones',
   feats: 'Feats',
 }
 
-const GROUP_ORDER: BadgeGroup[] = ['scoring_18', 'scoring_9', 'pars', 'birdies', 'feats']
+const GROUP_ORDER: BadgeGroup[] = [
+  'scoring_18',
+  'scoring_9',
+  'pars',
+  'birdies',
+  'participation',
+  'streaks',
+  'feats',
+]
 
 function formatDate(iso: string) {
   const d = new Date(iso)

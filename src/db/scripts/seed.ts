@@ -28,6 +28,141 @@ const DEFAULT_CLUBS = [
   { name: 'Putter',         type: 'putter' as const, defaultOrder: 17 },
 ]
 
+const PLACEHOLDER_CHALLENGES = [
+  {
+    name: '10 from 5 Feet',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 putts from 5 feet. Count how many you make. Your score is makes out of 10.',
+  },
+  {
+    name: 'Chip & Stick',
+    type: 'range' as const,
+    category: 'chipping' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Chip 10 balls from off the green. Score = number that finish within 6 feet of the hole.',
+  },
+  {
+    name: 'Up & Down Streak',
+    type: 'range' as const,
+    category: 'chipping' as const,
+    scoringType: 'makes_in_a_row' as const,
+    description: 'Chip, then make the next putt. Score is consecutive successful up-and-downs.',
+  },
+  {
+    name: 'Chip Ladder',
+    type: 'range' as const,
+    category: 'chipping' as const,
+    scoringType: 'count' as const,
+    unit: 'balls',
+    description: 'Land balls progressively farther onto the green. Each chip must land past the previous one — if it falls short, the challenge ends and that ball does not count. Score is the number of successful chips in a row.',
+  },
+  {
+    name: '5 in 9 Drill',
+    type: 'range' as const,
+    category: 'chipping' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 9,
+    description: 'Chip from 5 different locations around the green. After each chip, putt out. Your total stroke count must be 9 or fewer to pass — and at least one chip must be holed out. Score is your total strokes (lower is better).',
+  },
+  {
+    name: '100-Foot Drill',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 250,
+    description: 'Set up 4 putts at 5, 10, 15, and 20 feet around a hole at varying angles. Use your full pre-shot routine on every putt. Tally total feet made, then move to a new hole and repeat for 5 holes total (20 putts, 250 possible feet). Goal: 100+ feet made.',
+  },
+  {
+    name: 'Clock Drill',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 12,
+    description: 'Place 12 putts around the hole like a clock at 4-5 feet. Score is total putts made.',
+  },
+  {
+    name: 'Around-the-World (4x4 Drill)',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'count' as const,
+    unit: 'rounds',
+    description: 'Set 4 balls in a circle at 4 feet. You must make all 4 consecutively to complete one round. Score is the most full times around the world completed before a miss.',
+  },
+  {
+    name: 'One-Ball Survival',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'count' as const,
+    unit: 'feet' as const,
+    description: 'Start at 10 feet and move back 5 feet at a time. Keep putting from increasing distances until you 3-putt. Score is the farthest distance reached.',
+  },
+  {
+    name: 'Longest Drive',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'count' as const,
+    unit: 'yards',
+    description: 'Hit a measured drive. Log the carry distance in yards. Your best ever stays as the all-time record.',
+  },
+  {
+    name: 'Fairways in a Row',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'makes_in_a_row' as const,
+    description: 'Hit consecutive fairways on the range. A fairway is defined as landing between the Yellow and Green flags. Score is your longest streak before a miss.',
+  },
+  {
+    name: '200 Yard Fairway Challenge',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'makes_in_a_row' as const,
+    description: 'Using any club, hit shots that land in the fairway (between the Yellow and Green flags) AND carry between 180–220 yards. Both conditions must be met to count. Score is your longest streak of consecutive qualifying shots.',
+  },
+  {
+    name: 'Fairways out of 10',
+    type: 'range' as const,
+    category: 'driving' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 drives at a fairway target. Score = number that land in the fairway.',
+  },
+  {
+    name: 'Red Flag Challenge',
+    type: 'range' as const,
+    category: 'approach' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 shots to the red flag on the range. Ball must hit or come to rest on the raised green to count. Score is out of 10.',
+  },
+  {
+    name: 'Yellow Flag Challenge',
+    type: 'range' as const,
+    category: 'approach' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 shots to the yellow flag on the range. Ball must hit or come to rest on the raised green to count. Score is out of 10.',
+  },
+  {
+    name: 'Green Flag Challenge',
+    type: 'range' as const,
+    category: 'approach' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 10,
+    description: 'Hit 10 shots to the green flag on the range. Ball must hit or come to rest on the raised green to count. Score is out of 10.',
+  },
+  {
+    name: '5 in a Row from 3 Feet',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'pass_fail' as const,
+    description: 'Make 5 consecutive putts from 3 feet. Pass if you make all 5 in a row. If you miss, start over.',
+  },
+]
+
 async function main() {
   console.log('Seeding database…')
 
@@ -72,9 +207,9 @@ async function main() {
   }
 
   // Placeholder practice plans
-  const existingPlans = await db.select().from(schema.practicePlans)
-  if (existingPlans.length === 0) {
-    const plans = [
+  const existingPlans = await db.select({ title: schema.practicePlans.title }).from(schema.practicePlans)
+  const existingPlanTitles = new Set(existingPlans.map((p) => p.title))
+  const allPlans = [
       {
         title: 'Full Bag Warm-Up',
         focusArea: 'Warm-Up',
@@ -145,9 +280,31 @@ async function main() {
           { startMinute: 75, durationMinutes: 15, blockName: 'Focus & Commit',         drillDescription: 'Hit 15 balls with ONE swing thought only. If your mind wanders or you rush, stop, reset, and start the count over. Finish at 15 clean, committed swings.' },
         ],
       },
-    ]
+    {
+      title: "Tiger Woods' Masters Range Warmup",
+      focusArea: 'Range',
+      theme: 'Pre-round warmup routine',
+      totalDurationMinutes: 60,
+      equipmentList: 'Wedge, 8-iron, 4-iron, 5-iron, 5-wood, 3-wood, driver',
+      blocks: [
+        { startMinute: 0,  durationMinutes: 10, blockName: 'Wedge — 18 Shots',       drillDescription: 'Begin with 18 wedge shots. Focus on solid contact and consistent ball-striking to get your swing warmed up and grooved.' },
+        { startMinute: 10, durationMinutes: 8,  blockName: '8 Iron — 10 Shots',      drillDescription: 'Hit 10 shots with your 8-iron. Build on the tempo from the wedge and commit to a specific target for each shot.' },
+        { startMinute: 18, durationMinutes: 8,  blockName: '4–5 Iron — 9 Shots',     drillDescription: 'Hit 9 shots with a 4 or 5-iron. Lengthen your swing and focus on solid contact through the ball.' },
+        { startMinute: 26, durationMinutes: 5,  blockName: '5 Wood — 4 Shots',       drillDescription: 'Hit 4 shots with your 5-wood. Smooth tempo — sweep through the ball, no forcing it.' },
+        { startMinute: 31, durationMinutes: 6,  blockName: '3 Wood — 6 Shots',       drillDescription: 'Hit 6 shots with your 3-wood. Focus on a controlled, repeatable swing. Pick a target and commit.' },
+        { startMinute: 37, durationMinutes: 6,  blockName: 'Driver — 7 Shots',       drillDescription: 'Hit 7 driver shots. Find your fairway — stay in control and hit your shape.' },
+        { startMinute: 43, durationMinutes: 4,  blockName: '8 Iron — 3 Shots',       drillDescription: 'Come back down to the 8-iron for 3 shots. Reconnect with your rhythm and feel the iron swing again.' },
+        { startMinute: 47, durationMinutes: 5,  blockName: 'Wedge — 5 Shots',        drillDescription: '5 wedge shots to refocus on precision and feel. Lock in your distance control and trajectory.' },
+        { startMinute: 52, durationMinutes: 4,  blockName: '3 Wood — 2 Shots',       drillDescription: '2 final 3-wood shots. Smooth and confident — trust your swing.' },
+        { startMinute: 56, durationMinutes: 4,  blockName: 'Driver — 2 Shots',       drillDescription: 'Finish with 2 driver swings. End on a confident, committed tee shot. See your shape and trust it.' },
+        { startMinute: 60, durationMinutes: 5,  blockName: 'Wedge — 5 Shots (Finish)', drillDescription: '5 final wedge shots to end the session. Come back to feel and precision. Leave the range on a high note.' },
+      ],
+    },
+  ]
 
-    for (const plan of plans) {
+  const missingPlans = allPlans.filter((p) => !existingPlanTitles.has(p.title))
+  if (missingPlans.length > 0) {
+    for (const plan of missingPlans) {
       const { blocks, ...planData } = plan
       const [inserted] = await db
         .insert(schema.practicePlans)
@@ -158,59 +315,23 @@ async function main() {
         blocks.map((b, i) => ({ ...b, planId: inserted.id, orderIndex: i }))
       )
     }
-
-    console.log('✓ 5 placeholder practice plans inserted')
+    console.log(`✓ ${missingPlans.length} practice plan${missingPlans.length === 1 ? '' : 's'} inserted`)
   } else {
     console.log('  Practice plans already exist, skipping')
   }
 
-  // Placeholder challenges
-  const existingChallenges = await db.select().from(schema.challenges)
-  if (existingChallenges.length === 0) {
-    await db.insert(schema.challenges).values([
-      {
-        name: '10 from 5 Feet',
-        type: 'range',
-        category: 'putting',
-        scoringType: 'score_out_of',
-        maxScore: 10,
-        description: 'Hit 10 putts from 5 feet. Count how many you make. Your score is makes out of 10.',
-      },
-      {
-        name: 'Chip & Stick',
-        type: 'range',
-        category: 'chipping',
-        scoringType: 'score_out_of',
-        maxScore: 10,
-        description: 'Chip 10 balls from off the green. Score = number that finish within 6 feet of the hole.',
-      },
-      {
-        name: 'Longest Drive',
-        type: 'range',
-        category: 'driving',
-        scoringType: 'count',
-        unit: 'yards',
-        description: 'Hit a measured drive. Log the carry distance in yards. Your best ever stays as the all-time record.',
-      },
-      {
-        name: 'Fairways out of 10',
-        type: 'range',
-        category: 'driving',
-        scoringType: 'score_out_of',
-        maxScore: 10,
-        description: 'Hit 10 drives at a fairway target. Score = number that land in the fairway.',
-      },
-      {
-        name: '5 in a Row from 3 Feet',
-        type: 'range',
-        category: 'putting',
-        scoringType: 'pass_fail',
-        description: 'Make 5 consecutive putts from 3 feet. Pass if you make all 5 in a row. If you miss, start over.',
-      },
-    ])
-    console.log('✓ 5 placeholder challenges inserted')
+  // Placeholder challenges (insert any missing by name)
+  const existingChallenges = await db
+    .select({ name: schema.challenges.name })
+    .from(schema.challenges)
+  const existingNames = new Set(existingChallenges.map((c) => c.name))
+  const missingChallenges = PLACEHOLDER_CHALLENGES.filter((c) => !existingNames.has(c.name))
+
+  if (missingChallenges.length > 0) {
+    await db.insert(schema.challenges).values(missingChallenges)
+    console.log(`✓ ${missingChallenges.length} placeholder challenge${missingChallenges.length === 1 ? '' : 's'} inserted`)
   } else {
-    console.log('  Challenges already exist, skipping')
+    console.log('  Placeholder challenges already exist, skipping')
   }
 
   console.log('\nSeed complete.')

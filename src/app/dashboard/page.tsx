@@ -6,6 +6,7 @@ import ChallengesTab from '@/components/dashboard/ChallengesTab'
 import LeaderboardTab from '@/components/dashboard/LeaderboardTab'
 import StatsTab from '@/components/dashboard/StatsTab'
 import RoundsTab from '@/components/dashboard/RoundsTab'
+import RulesTab from '@/components/dashboard/RulesTab'
 
 type Props = {
   searchParams: Promise<{ tab?: string; view?: string }>
@@ -27,6 +28,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       {activeTab === 'leaderboard'&& <LeaderboardTab userId={userId} view={view} />}
       {activeTab === 'stats'      && <StatsTab userId={userId} />}
       {activeTab === 'rounds'     && <RoundsTab />}
+      {activeTab === 'rules'      && <RulesTab />}
     </div>
   )
 }

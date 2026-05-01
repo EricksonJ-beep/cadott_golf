@@ -133,6 +133,11 @@ export default function CreateChallengeForm() {
             />
           </div>
 
+          <label className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+            <input type="checkbox" name="isFeatured" className="h-4 w-4" />
+            <span>Mark as featured challenge</span>
+          </label>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex gap-2">

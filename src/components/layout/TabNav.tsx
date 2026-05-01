@@ -10,6 +10,7 @@ const tabs = [
   { id: 'leaderboard',label: 'Board',    icon: '🏆' },
   { id: 'stats',     label: 'Stats',     icon: '📊' },
   { id: 'rounds',    label: 'Rounds',    icon: '⛳' },
+  { id: 'rules',     label: 'Rules',     icon: '📖' },
 ]
 
 export default function TabNav() {

@@ -5,12 +5,14 @@ import {
   getMyRoundRecords,
   getMySeasonSummary,
   getMyBadges,
+  getMyStreaks,
 } from '@/app/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import TrendChart from './TrendChart'
 import SeasonAveragesCard from './SeasonAveragesCard'
 import TrophyRoom from './TrophyRoom'
+import StreaksCard from './StreaksCard'
 
 const CATEGORY_LABEL: Record<string, string> = {
   putting: 'Putting',
@@ -35,12 +37,13 @@ function formatScore(
 }
 
 export default async function StatsTab(_props: { userId: number }) {
-  const [bests, mostLogged, records, season, badges] = await Promise.all([
+  const [bests, mostLogged, records, season, badges, streaks] = await Promise.all([
     getMyPersonalBests(),
     getMyMostLoggedChallenge(),
     getMyRoundRecords(),
     getMySeasonSummary(),
     getMyBadges(),
+    getMyStreaks(),
   ])
 
   const hasAnyBadge = Object.values(badges).some((v) => v !== null)
@@ -67,6 +70,8 @@ export default async function StatsTab(_props: { userId: number }) {
       <h2 className="text-xl font-bold">Stats</h2>
 
       {season && <SeasonAveragesCard summary={season} />}
+
+      <StreaksCard streaks={streaks} />
 
       {records.allTimeRounds > 0 && (
         <Card>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DeleteRoundButton } from '@/components/rounds/DeleteRoundButton'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -72,17 +73,7 @@ export default async function RoundDetailPage({ params }: Props) {
                 <Button variant="outline" size="sm" className="h-8 text-xs">Edit</Button>
               </Link>
               <form action={handleDelete}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={(e) => {
-                    if (!confirm('Delete this round? This cannot be undone.')) e.preventDefault()
-                  }}
-                >
-                  Delete
-                </Button>
+                <DeleteRoundButton />
               </form>
             </div>
           )}

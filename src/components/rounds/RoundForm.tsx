@@ -70,7 +70,7 @@ function buildTemplateHoles(parByHole: number[], segment: RoundSegment): Hole[] 
     holeNumber: start + idx,
     par,
     score: par,
-    fairwayHit: par === 3 ? null : false,
+    fairwayHit: null,
     gir: false,
     putts: 2,
   }))
@@ -204,7 +204,7 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
               className="w-full h-12 rounded-md border bg-white px-3 text-sm"
             >
               <option value="">Custom course (manual)</option>
-              {COURSE_SCORECARDS.map((course) => (
+              {[...COURSE_SCORECARDS].sort((a, b) => a.name.localeCompare(b.name)).map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.name} ({course.city})
                 </option>

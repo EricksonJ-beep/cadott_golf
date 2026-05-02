@@ -17,7 +17,7 @@ export async function getMyClubs() {
     with: {
       defaultClub: true,
       distances: {
-        orderBy: (d, { desc }) => [desc(d.dateLogged)],
+        orderBy: (d, { desc }) => [desc(d.dateLogged), desc(d.id)],
       },
     },
     orderBy: (c, { asc }) => [asc(c.orderIndex)],
@@ -38,41 +38,39 @@ export async function initializePlayerClubs(userId: number) {
   )
 }
 
-export async function saveClubDistance(formData: FormData) {
+type SwingType = 'full' | 'three_quarter' | 'half' | 'quarter'
+
+export async function saveClubEdits(input: {
+  playerClubId: number
+  customName?: string | null
+  distances: Array<{
+    swingType: SwingType
+    carryYards: number | null
+    totalYards: number | null
+  }>
+}) {
   const session = await auth()
   if (!session?.user) redirect('/')
   const userId = Number(session.user.id)
 
-  const playerClubId = Number(formData.get('playerClubId'))
-  const swingType = (formData.get('swingType') as string) || 'full'
-  const carryYards = formData.get('carryYards') ? Number(formData.get('carryYards')) : null
-  const totalYards = formData.get('totalYards') ? Number(formData.get('totalYards')) : null
-  const typicalMiss = (formData.get('typicalMiss') as string) || null
-  const isGoTo = formData.get('isGoTo') === 'true'
-  const isAvoid = formData.get('isAvoid') === 'true'
+  if (input.customName !== undefined) {
+    await db
+      .update(playerClubs)
+      .set({ customName: input.customName?.trim() || null })
+      .where(eq(playerClubs.id, input.playerClubId))
+  }
 
-  await db.insert(clubDistances).values({
-    userId,
-    playerClubId,
-    swingType: swingType as 'full' | 'three_quarter' | 'half' | 'quarter',
-    carryYards,
-    totalYards,
-    typicalMiss,
-    isGoTo,
-    isAvoid,
-  })
-
-  revalidatePath('/dashboard')
-}
-
-export async function updateClubName(playerClubId: number, customName: string) {
-  const session = await auth()
-  if (!session?.user) redirect('/')
-
-  await db
-    .update(playerClubs)
-    .set({ customName: customName.trim() || null })
-    .where(eq(playerClubs.id, playerClubId))
+  if (input.distances.length > 0) {
+    await db.insert(clubDistances).values(
+      input.distances.map((d) => ({
+        userId,
+        playerClubId: input.playerClubId,
+        swingType: d.swingType,
+        carryYards: d.carryYards,
+        totalYards: d.totalYards,
+      }))
+    )
+  }
 
   revalidatePath('/dashboard')
 }

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import TrendChart from './TrendChart'
 import SeasonAveragesCard from './SeasonAveragesCard'
+import CourseStatsCard from './CourseStatsCard'
 import TrophyRoom from './TrophyRoom'
 import StreaksCard from './StreaksCard'
 
@@ -68,6 +69,15 @@ export default async function StatsTab(_props: { userId: number }) {
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-bold">Stats</h2>
+
+      {season && (
+        <CourseStatsCard
+          girPct={season.girPct}
+          firPct={season.firPct}
+          avgPutts18={season.avgPutts18}
+          avgPutts9={season.avgPutts9}
+        />
+      )}
 
       {season && <SeasonAveragesCard summary={season} />}
 

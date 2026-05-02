@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { saveClubDistance, toggleClubHidden, updateClubName } from '@/app/actions/clubs'
+import { saveClubEdits, toggleClubHidden } from '@/app/actions/clubs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ChevronRight } from 'lucide-react'
 
 type Distance = {
   id: number
@@ -46,35 +47,32 @@ function ClubRow({ club, onEdit }: { club: Club; onEdit: (club: Club) => void })
   if (club.isHidden) return null
 
   return (
-    <div className="py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="font-medium text-sm truncate">{name}</span>
-        </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 px-2 text-xs text-muted-foreground shrink-0"
-          onClick={() => onEdit(club)}
-        >
-          Edit
-        </Button>
-      </div>
-      {fullDist ? (
-        <div className="mt-1 text-sm text-muted-foreground">
-          <div className="flex gap-4 flex-wrap">
-            {fullDist.carryYards && (
-              <span>Carry <strong className="text-foreground">{fullDist.carryYards}y</strong></span>
+    <button
+      type="button"
+      onClick={() => onEdit(club)}
+      className="w-full py-4 flex items-center justify-between text-left hover:bg-zinc-50 active:bg-zinc-100 transition-colors"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-base leading-tight">{name}</div>
+        {fullDist && (fullDist.carryYards != null || fullDist.totalYards != null) ? (
+          <div className="flex gap-4 mt-1 flex-wrap">
+            {fullDist.carryYards != null && (
+              <span className="text-sm text-muted-foreground">
+                Carry <span className="font-bold text-foreground text-base">{fullDist.carryYards}y</span>
+              </span>
             )}
-            {fullDist.totalYards && (
-              <span>Total <strong className="text-foreground">{fullDist.totalYards}y</strong></span>
+            {fullDist.totalYards != null && (
+              <span className="text-sm text-muted-foreground">
+                Total <span className="font-bold text-foreground text-base">{fullDist.totalYards}y</span>
+              </span>
             )}
           </div>
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground mt-0.5">No distances logged yet</p>
-      )}
-    </div>
+        ) : (
+          <p className="text-sm text-muted-foreground mt-0.5">Tap to add distances</p>
+        )}
+      </div>
+      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 ml-2" />
+    </button>
   )
 }
 
@@ -95,12 +93,12 @@ function WedgeGrid({
         <CardTitle className="text-base">Wedges</CardTitle>
       </CardHeader>
       <CardContent className="px-2">
-        <div className="grid grid-cols-[1fr_repeat(4,minmax(40px,1fr))] gap-x-1 gap-y-0.5 text-sm">
+        <div className="grid grid-cols-[1fr_repeat(4,minmax(48px,1fr))] gap-x-1 gap-y-1">
           <div />
           {WEDGE_SWINGS.map((s) => (
             <div
               key={s}
-              className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pb-1"
+              className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-1"
             >
               {SWING_LABELS[s]}
             </div>
@@ -137,7 +135,7 @@ function FragmentRow({
       <button
         type="button"
         onClick={() => onEdit(wedge, 'full')}
-        className="text-left text-sm font-medium truncate py-2 px-1 hover:bg-zinc-50 rounded"
+        className="text-left text-base font-semibold truncate py-3 px-1 hover:bg-zinc-50 active:bg-zinc-100 rounded transition-colors"
       >
         {name}
       </button>
@@ -149,10 +147,10 @@ function FragmentRow({
             key={swing}
             type="button"
             onClick={() => onEdit(wedge, swing)}
-            className={`h-10 rounded text-sm font-semibold tabular-nums transition-colors ${
+            className={`h-12 rounded-lg text-base font-bold tabular-nums transition-colors ${
               yards !== null
-                ? 'bg-zinc-50 hover:bg-zinc-100 text-foreground'
-                : 'bg-transparent hover:bg-zinc-50 text-muted-foreground'
+                ? 'bg-zinc-100 hover:bg-zinc-200 text-foreground'
+                : 'bg-zinc-50 hover:bg-zinc-100 text-muted-foreground'
             }`}
           >
             {yards !== null ? yards : '—'}
@@ -161,6 +159,22 @@ function FragmentRow({
       })}
     </>
   )
+}
+
+const ALL_SWINGS = ['full', 'three_quarter', 'half', 'quarter'] as const
+type SwingType = (typeof ALL_SWINGS)[number]
+type SwingDraft = { carry: string; total: string }
+
+function buildInitialDrafts(club: Club): Record<SwingType, SwingDraft> {
+  const out = {} as Record<SwingType, SwingDraft>
+  for (const s of ALL_SWINGS) {
+    const d = latestDistance(club.distances, s)
+    out[s] = {
+      carry: d?.carryYards != null ? String(d.carryYards) : '',
+      total: d?.totalYards != null ? String(d.totalYards) : '',
+    }
+  }
+  return out
 }
 
 function EditClubModal({
@@ -173,29 +187,63 @@ function EditClubModal({
   onClose: () => void
 }) {
   const [pending, startTransition] = useTransition()
-  const [swingType, setSwingType] = useState(initialSwingType)
+  const isWedge = club.defaultClub?.type === 'wedge'
+  const [swingType, setSwingType] = useState<SwingType>(
+    (ALL_SWINGS as readonly string[]).includes(initialSwingType)
+      ? (initialSwingType as SwingType)
+      : 'full'
+  )
   const currentName = club.customName ?? club.defaultClub?.name ?? ''
   const [nameDraft, setNameDraft] = useState(currentName)
+  const [drafts, setDrafts] = useState<Record<SwingType, SwingDraft>>(() =>
+    buildInitialDrafts(club)
+  )
   const [confirmingRemove, setConfirmingRemove] = useState(false)
-  const isWedge = club.defaultClub?.type === 'wedge'
-  const existing = latestDistance(club.distances, swingType)
+  const initialDrafts = buildInitialDrafts(club)
   const nameDirty = nameDraft.trim() !== currentName.trim()
+  const swingsToTrack: readonly SwingType[] = isWedge ? ALL_SWINGS : (['full'] as const)
+  const distancesDirty = swingsToTrack.some(
+    (s) =>
+      drafts[s].carry !== initialDrafts[s].carry ||
+      drafts[s].total !== initialDrafts[s].total
+  )
+  const dirty = nameDirty || distancesDirty
 
-  function handleDistanceSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    fd.set('playerClubId', String(club.id))
-    fd.set('swingType', swingType)
-    startTransition(async () => {
-      await saveClubDistance(fd)
-      onClose()
-    })
+  function updateDraft(swing: SwingType, field: 'carry' | 'total', value: string) {
+    setDrafts((prev) => ({ ...prev, [swing]: { ...prev[swing], [field]: value } }))
   }
 
-  function handleRename() {
-    if (!nameDirty) return
+  function parseYards(s: string): number | null {
+    const trimmed = s.trim()
+    if (trimmed === '') return null
+    const n = Number(trimmed)
+    return Number.isFinite(n) ? n : null
+  }
+
+  function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!dirty) {
+      onClose()
+      return
+    }
+    const distances = swingsToTrack
+      .filter(
+        (s) =>
+          drafts[s].carry !== initialDrafts[s].carry ||
+          drafts[s].total !== initialDrafts[s].total
+      )
+      .map((s) => ({
+        swingType: s,
+        carryYards: parseYards(drafts[s].carry),
+        totalYards: parseYards(drafts[s].total),
+      }))
+
     startTransition(async () => {
-      await updateClubName(club.id, nameDraft.trim())
+      await saveClubEdits({
+        playerClubId: club.id,
+        customName: nameDirty ? nameDraft.trim() || null : undefined,
+        distances,
+      })
       onClose()
     })
   }
@@ -207,6 +255,8 @@ function EditClubModal({
     })
   }
 
+  const current = drafts[swingType]
+
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
@@ -214,26 +264,16 @@ function EditClubModal({
           <h3 className="font-bold text-base truncate">{currentName || 'Club'}</h3>
           <button onClick={onClose} className="text-muted-foreground text-xl leading-none shrink-0">&times;</button>
         </div>
-        <div className="p-4 space-y-4">
+        <form onSubmit={handleSave} className="p-4 space-y-4">
           <div className="space-y-1">
             <Label htmlFor="customName">Club name</Label>
-            <div className="flex gap-2">
-              <Input
-                id="customName"
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                placeholder={club.defaultClub?.name ?? ''}
-                className="h-11 flex-1"
-              />
-              <Button
-                type="button"
-                disabled={!nameDirty || pending}
-                onClick={handleRename}
-                className="h-11 bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-40"
-              >
-                Rename
-              </Button>
-            </div>
+            <Input
+              id="customName"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              placeholder={club.defaultClub?.name ?? ''}
+              className="h-11"
+            />
             <p className="text-xs text-muted-foreground">
               Rename your club (e.g. 5 Wood → 7 Wood). Leave blank to use the default.
             </p>
@@ -242,7 +282,7 @@ function EditClubModal({
           <div className="border-t pt-4 space-y-3">
             {isWedge && (
               <div className="flex gap-2">
-                {(['full', 'three_quarter', 'half', 'quarter'] as const).map((s) => (
+                {ALL_SWINGS.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -258,41 +298,44 @@ function EditClubModal({
                 ))}
               </div>
             )}
-            <form onSubmit={handleDistanceSubmit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="carryYards">Carry (yds)</Label>
-                  <Input
-                    key={`carry-${swingType}`}
-                    id="carryYards"
-                    name="carryYards"
-                    type="number"
-                    inputMode="numeric"
-                    defaultValue={existing?.carryYards ?? ''}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="totalYards">Total (yds)</Label>
-                  <Input
-                    key={`total-${swingType}`}
-                    id="totalYards"
-                    name="totalYards"
-                    type="number"
-                    inputMode="numeric"
-                    defaultValue={existing?.totalYards ?? ''}
-                    className="h-11"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="carryYards">Carry (yds)</Label>
+                <Input
+                  id="carryYards"
+                  name="carryYards"
+                  type="number"
+                  inputMode="numeric"
+                  value={current.carry}
+                  onChange={(e) => updateDraft(swingType, 'carry', e.target.value)}
+                  className="h-11"
+                />
               </div>
-              <Button
-                type="submit"
-                disabled={pending}
-                className="w-full h-11 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold"
-              >
-                {pending ? 'Saving…' : 'Save Distance'}
-              </Button>
-            </form>
+              <div className="space-y-1">
+                <Label htmlFor="totalYards">Total (yds)</Label>
+                <Input
+                  id="totalYards"
+                  name="totalYards"
+                  type="number"
+                  inputMode="numeric"
+                  value={current.total}
+                  onChange={(e) => updateDraft(swingType, 'total', e.target.value)}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            {isWedge && (
+              <p className="text-xs text-muted-foreground">
+                Switch swings above to enter all yardages, then save once.
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={pending || !dirty}
+              className="w-full h-11 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold disabled:opacity-50"
+            >
+              {pending ? 'Saving…' : 'Save'}
+            </Button>
           </div>
 
           <div className="border-t pt-3">
@@ -334,7 +377,7 @@ function EditClubModal({
               </button>
             )}
           </div>
-        </div>
+        </form>
       </div>
     </div>
   )
@@ -350,11 +393,16 @@ export default function ClubDistancesClient({ clubs }: { clubs: Club[] }) {
 
   return (
     <>
+      <WedgeGrid
+        wedges={visibleWedges}
+        onEdit={(club, swingType) => setEditing({ club, swingType })}
+      />
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Club Distances</CardTitle>
         </CardHeader>
-        <CardContent className="divide-y divide-zinc-100">
+        <CardContent className="divide-y divide-zinc-100 px-4">
           {visibleNonWedges.length === 0 && (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Tap a club to add distances.
@@ -368,23 +416,23 @@ export default function ClubDistancesClient({ clubs }: { clubs: Club[] }) {
             />
           ))}
           {hidden.length > 0 && (
-            <div className="pt-3">
+            <div className="pt-3 pb-1">
               <button
                 onClick={() => setShowHidden((v) => !v)}
-                className="text-xs text-muted-foreground underline"
+                className="text-sm text-muted-foreground underline"
               >
                 {showHidden ? 'Hide' : 'Show'} {hidden.length} hidden club{hidden.length !== 1 ? 's' : ''}
               </button>
               {showHidden &&
                 hidden.map((club) => (
-                  <div key={club.id} className="py-2 flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                  <div key={club.id} className="py-3 flex items-center justify-between">
+                    <span className="text-base font-medium text-muted-foreground">
                       {club.customName || club.defaultClub?.name}
                     </span>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 px-2 text-xs"
+                      className="h-9 px-3 text-sm"
                       onClick={() => toggleClubHidden(club.id, false)}
                     >
                       Unhide
@@ -395,11 +443,6 @@ export default function ClubDistancesClient({ clubs }: { clubs: Club[] }) {
           )}
         </CardContent>
       </Card>
-
-      <WedgeGrid
-        wedges={visibleWedges}
-        onEdit={(club, swingType) => setEditing({ club, swingType })}
-      />
 
       {editing && (
         <EditClubModal

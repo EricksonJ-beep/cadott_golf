@@ -140,11 +140,17 @@ export async function getMySeasonSummary() {
       avgScore18: sql<number | null>`avg(${rounds.totalScore}) filter (where ${rounds.holesPlayed} = 18)::float`,
       rounds9:    sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 9)::int`,
       rounds18:   sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 18)::int`,
-      eagles:     sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} <= -2)::int`,
-      birdies:    sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = -1)::int`,
-      pars:       sql<number>`count(*) filter (where ${roundHoles.score} = ${roundHoles.par})::int`,
-      bogeys:     sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 1)::int`,
-      doubles:    sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} >= 2)::int`,
+      eagles:          sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} <= -2)::int`,
+      birdies:         sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = -1)::int`,
+      pars:            sql<number>`count(*) filter (where ${roundHoles.score} = ${roundHoles.par})::int`,
+      bogeys:          sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = 1)::int`,
+      doubles:         sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} >= 2)::int`,
+      girTotal:        sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
+      girHoles:        sql<number>`count(${roundHoles.id})::int`,
+      firHit:          sql<number>`count(*) filter (where ${roundHoles.fairwayHit} = true)::int`,
+      firOpportunities: sql<number>`count(*) filter (where ${roundHoles.par} >= 4 and ${roundHoles.fairwayHit} is not null)::int`,
+      avgPutts18:      sql<number | null>`(sum(${roundHoles.putts}) filter (where ${rounds.holesPlayed} = 18))::float / nullif(count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 18), 0)`,
+      avgPutts9:       sql<number | null>`(sum(${roundHoles.putts}) filter (where ${rounds.holesPlayed} = 9))::float / nullif(count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 9), 0)`,
     })
     .from(rounds)
     .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))
@@ -161,6 +167,10 @@ export async function getMySeasonSummary() {
     pars: summary?.pars ?? 0,
     bogeys: summary?.bogeys ?? 0,
     doubles: summary?.doubles ?? 0,
+    girPct: summary && summary.girHoles > 0 ? summary.girTotal / summary.girHoles : null,
+    firPct: summary && summary.firOpportunities > 0 ? summary.firHit / summary.firOpportunities : null,
+    avgPutts18: summary?.avgPutts18 ?? null,
+    avgPutts9: summary?.avgPutts9 ?? null,
   }
 }
 
@@ -189,14 +199,16 @@ export async function getMyBadges(): Promise<EarnedMap> {
       par: roundHoles.par,
       score: roundHoles.score,
       putts: roundHoles.putts,
+      gir: roundHoles.gir,
+      fairwayHit: roundHoles.fairwayHit,
     })
     .from(roundHoles)
     .where(inArray(roundHoles.roundId, roundIds))
 
-  const holesByRound = new Map<number, { par: number; score: number; putts: number }[]>()
+  const holesByRound = new Map<number, { par: number; score: number; putts: number; gir: boolean; fairwayHit: boolean | null }[]>()
   for (const h of holes) {
     if (!holesByRound.has(h.roundId)) holesByRound.set(h.roundId, [])
-    holesByRound.get(h.roundId)!.push({ par: h.par, score: h.score, putts: h.putts })
+    holesByRound.get(h.roundId)!.push({ par: h.par, score: h.score, putts: h.putts, gir: h.gir, fairwayHit: h.fairwayHit })
   }
 
   const forBadges: RoundForBadges[] = userRounds.map((r) => ({

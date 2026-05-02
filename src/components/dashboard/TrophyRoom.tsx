@@ -2,13 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BADGE_DEFS, type BadgeGroup, type EarnedMap } from '@/lib/badges'
 
 const GROUP_LABELS: Record<BadgeGroup, string> = {
-  scoring_18: '18-Hole Scoring',
-  scoring_9: '9-Hole Scoring',
-  pars: 'Pars in a Round',
-  birdies: 'Birdies in a Round',
-  participation: 'Participation',
-  streaks: 'Streak Milestones',
-  feats: 'Feats',
+  scoring_18:        '18-Hole Scoring',
+  scoring_9:         '9-Hole Scoring',
+  pars:              'Pars in a Round',
+  birdies:           'Birdies in a Round',
+  participation:     'Participation',
+  streaks:           'Streak Milestones',
+  feats:             'Feats',
+  greens_fairways:   'Greens & Fairways',
+  putting_milestones: 'Putting Milestones',
 }
 
 const GROUP_ORDER: BadgeGroup[] = [
@@ -16,6 +18,8 @@ const GROUP_ORDER: BadgeGroup[] = [
   'scoring_9',
   'pars',
   'birdies',
+  'greens_fairways',
+  'putting_milestones',
   'participation',
   'streaks',
   'feats',

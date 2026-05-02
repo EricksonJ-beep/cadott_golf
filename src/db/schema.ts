@@ -98,6 +98,7 @@ export const practicePlans = pgTable('practice_plans', {
   createdBy: integer('created_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   isActive: boolean('is_active').notNull().default(true),
+  orderIndex: integer('order_index').notNull().default(0),
 })
 
 // ── Practice plan blocks ──────────────────────────────────────────────────────

@@ -6,6 +6,8 @@ export type BadgeGroup =
   | 'participation'
   | 'streaks'
   | 'feats'
+  | 'greens_fairways'
+  | 'putting_milestones'
 
 export type BadgeDef = {
   id: string
@@ -52,16 +54,32 @@ export const BADGE_DEFS: BadgeDef[] = [
   { id: 'par_streak_5',    name: 'Par Streak x5',    emoji: '🌟', description: 'Make at least one par in 5 straight rounds', group: 'streaks' },
 
   // Single feats
-  { id: 'eagle',           name: 'Eagle',           emoji: '🦅', description: 'Make an eagle (or better)',        group: 'feats' },
-  { id: 'no_three_putts',  name: 'No 3-Putts',      emoji: '🎯', description: 'Complete a round with no 3-putts', group: 'feats' },
-  { id: 'no_double_bogeys', name: 'No Doubles',     emoji: '🛡️', description: 'Complete a round with no doubles+', group: 'feats' },
+  { id: 'eagle',            name: 'Eagle',        emoji: '🦅', description: 'Make an eagle (or better)',              group: 'feats' },
+  { id: 'no_three_putts',   name: 'No 3-Putts',   emoji: '🎯', description: 'Complete a round with no 3-putts',       group: 'feats' },
+  { id: 'no_double_bogeys', name: 'No Doubles',   emoji: '🛡️', description: 'Complete a round with no doubles+',      group: 'feats' },
+  { id: 'no_triples',       name: 'No Triples',   emoji: '💎', description: 'Complete a round with no triple bogeys+', group: 'feats' },
+
+  // Greens & Fairways
+  { id: 'gir_1',    name: '1 Green in Reg',  emoji: '⛳', description: 'Hit at least 1 green in regulation in a round',  group: 'greens_fairways' },
+  { id: 'gir_3',    name: '3 Greens in Reg', emoji: '🎯', description: 'Hit at least 3 greens in regulation in a round', group: 'greens_fairways' },
+  { id: 'gir_5',    name: '5 Greens in Reg', emoji: '🌟', description: 'Hit at least 5 greens in regulation in a round', group: 'greens_fairways' },
+  { id: 'fir_30',   name: '30% Fairways',    emoji: '🌿', description: 'Hit 30%+ of fairways in a round',                group: 'greens_fairways' },
+  { id: 'fir_50',   name: '50% Fairways',    emoji: '🟩', description: 'Hit 50%+ of fairways in a round',                group: 'greens_fairways' },
+  { id: 'fir_70',   name: '70% Fairways',    emoji: '🏹', description: 'Hit 70%+ of fairways in a round',                group: 'greens_fairways' },
+
+  // Putting milestones
+  { id: 'putts_36_18', name: '≤36 Putts (18)', emoji: '🎱', description: 'Average 2 putts per hole over 18 holes',                   group: 'putting_milestones' },
+  { id: 'putts_32_18', name: '≤32 Putts (18)', emoji: '✨', description: 'Finish an 18-hole round with 32 or fewer total putts',      group: 'putting_milestones' },
+  { id: 'putts_28_18', name: '≤28 Putts (18)', emoji: '💫', description: 'Finish an 18-hole round with 28 or fewer total putts',      group: 'putting_milestones' },
+  { id: 'putts_18_9',  name: '≤18 Putts (9)',  emoji: '🎱', description: 'Average 2 putts per hole over 9 holes',                    group: 'putting_milestones' },
+  { id: 'putts_15_9',  name: '≤15 Putts (9)',  emoji: '✨', description: 'Finish a 9-hole round with 15 or fewer total putts',        group: 'putting_milestones' },
 ]
 
 export type RoundForBadges = {
   date: string // ISO date
   holesPlayed: number
   totalScore: number | null
-  holes: { par: number; score: number; putts: number }[]
+  holes: { par: number; score: number; putts: number; gir: boolean; fairwayHit: boolean | null }[]
 }
 
 export type EarnedMap = Record<string, string | null> // badgeId -> earnedAt ISO date
@@ -85,7 +103,13 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     const birdies = r.holes.filter((h) => h.score - h.par === -1).length
     const eagles = r.holes.filter((h) => h.score - h.par <= -2).length
     const doubles = r.holes.filter((h) => h.score - h.par >= 2).length
+    const triples = r.holes.filter((h) => h.score - h.par >= 3).length
     const maxPutts = r.holes.reduce((m, h) => Math.max(m, h.putts), 0)
+    const totalPutts = r.holes.reduce((s, h) => s + h.putts, 0)
+    const girCount = r.holes.filter((h) => h.gir).length
+    const firHoles = r.holes.filter((h) => h.par >= 4 && h.fairwayHit !== null)
+    const firHit = firHoles.filter((h) => h.fairwayHit === true).length
+    const firPct = firHoles.length > 0 ? firHit / firHoles.length : null
 
     // Scoring 18
     if (r.holesPlayed === 18) {
@@ -118,6 +142,26 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     if (eagles >= 1) award('eagle', r.date)
     if (maxPutts < 3) award('no_three_putts', r.date)
     if (doubles === 0) award('no_double_bogeys', r.date)
+    if (triples === 0) award('no_triples', r.date)
+
+    // Greens & Fairways
+    if (girCount >= 1) award('gir_1', r.date)
+    if (girCount >= 3) award('gir_3', r.date)
+    if (girCount >= 5) award('gir_5', r.date)
+    if (firPct !== null && firPct >= 0.30) award('fir_30', r.date)
+    if (firPct !== null && firPct >= 0.50) award('fir_50', r.date)
+    if (firPct !== null && firPct >= 0.70) award('fir_70', r.date)
+
+    // Putting milestones
+    if (r.holesPlayed === 18) {
+      if (totalPutts <= 36) award('putts_36_18', r.date)
+      if (totalPutts <= 32) award('putts_32_18', r.date)
+      if (totalPutts <= 28) award('putts_28_18', r.date)
+    }
+    if (r.holesPlayed === 9) {
+      if (totalPutts <= 18) award('putts_18_9', r.date)
+      if (totalPutts <= 15) award('putts_15_9', r.date)
+    }
   }
 
   // Participation milestones

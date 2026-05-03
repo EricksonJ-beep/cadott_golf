@@ -4,10 +4,10 @@ const tiles = [
   { id: 'info',        label: 'My Info',       icon: '👤' },
   { id: 'practice',    label: 'Practice',      icon: '📋' },
   { id: 'challenges',  label: 'Challenges',    icon: '🎯' },
-  { id: 'leaderboard', label: 'Birdie Board',  icon: '🏆' },
+  { id: 'leaderboard', label: 'Leaderboard',   icon: '🏆' },
   { id: 'stats',       label: 'Stats',         icon: '📊' },
   { id: 'rounds',      label: 'Rounds',        icon: '⛳' },
-  { id: 'courses',     label: 'Courses',       icon: '🗺️' },
+  { id: 'courses',     label: 'Course Strategy', icon: '🗺️' },
   { id: 'rules',       label: 'Rules',         icon: '📖' },
 ]
 

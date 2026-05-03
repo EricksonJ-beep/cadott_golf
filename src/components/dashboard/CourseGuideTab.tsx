@@ -9,7 +9,7 @@ export default function CourseGuideTab() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-bold">Course Guide</h2>
+        <h2 className="text-xl font-bold">Course Strategy</h2>
         <p className="text-xs text-muted-foreground mt-1">
           Coach strategy + your own notes for each hole. Pick a course to view.
         </p>

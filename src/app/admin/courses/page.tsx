@@ -9,7 +9,7 @@ export default function AdminCoursesPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold">Course Guides</h1>
+        <h1 className="text-xl font-bold">Course Strategy</h1>
         <p className="text-xs text-muted-foreground mt-1">
           Build hole-by-hole strategy notes that the whole team will see.
         </p>

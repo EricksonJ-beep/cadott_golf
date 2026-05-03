@@ -60,6 +60,9 @@ export async function createPlayer(prevState: string | null, formData: FormData)
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1)
   if (existing.length > 0) return `Username "${username}" is already taken.`
 
+  // 'worker' is a coach-owned test account, exempt from forced password change
+  const isTestAccount = username === 'worker'
+
   const hash = await bcrypt.hash(tempPassword, 12)
   await db.insert(users).values({
     username,
@@ -67,7 +70,7 @@ export async function createPlayer(prevState: string | null, formData: FormData)
     role,
     name,
     grade,
-    mustChangePassword: true,
+    mustChangePassword: !isTestAccount,
   })
 
   revalidatePath('/admin/roster')
@@ -83,10 +86,17 @@ export async function resetPlayerPassword(prevState: string | null, formData: Fo
 
   if (!newPassword || newPassword.length < 6) return 'Password must be at least 6 characters.'
 
+  const [target] = await db
+    .select({ username: users.username })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+  const isTestAccount = target?.username === 'worker'
+
   const hash = await bcrypt.hash(newPassword, 12)
   await db
     .update(users)
-    .set({ passwordHash: hash, mustChangePassword: true, passwordResetAt: new Date() })
+    .set({ passwordHash: hash, mustChangePassword: !isTestAccount, passwordResetAt: new Date() })
     .where(eq(users.id, userId))
 
   revalidatePath('/admin/roster')

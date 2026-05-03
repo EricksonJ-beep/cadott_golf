@@ -195,6 +195,32 @@ export const statsChartPreferences = pgTable('stats_chart_preferences', {
   orderIndex: integer('order_index').notNull().default(0),
 })
 
+// ── Course hole guides (coach-authored, shared with team) ───────────────────
+export const courseHoleGuides = pgTable('course_hole_guides', {
+  id: serial('id').primaryKey(),
+  courseId: text('course_id').notNull(),
+  holeNumber: integer('hole_number').notNull(),
+  teeShotNotes: text('tee_shot_notes'),
+  approachNotes: text('approach_notes'),
+  aroundGreenNotes: text('around_green_notes'),
+  missAvoidNotes: text('miss_avoid_notes'),
+  generalStrategy: text('general_strategy'),
+  updatedBy: integer('updated_by').references(() => users.id),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+// ── Player hole notes (per-player, multiple entries over time) ──────────────
+export const playerHoleNotes = pgTable('player_hole_notes', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  courseId: text('course_id').notNull(),
+  holeNumber: integer('hole_number').notNull(),
+  noteText: text('note_text').notNull(),
+  noteDate: date('note_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
 // ── Relations ─────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({
   rosterEntries: many(rosterEntries),
@@ -257,4 +283,8 @@ export const roundHolesRelations = relations(roundHoles, ({ one }) => ({
 export const rosterEntriesRelations = relations(rosterEntries, ({ one }) => ({
   user: one(users, { fields: [rosterEntries.userId], references: [users.id] }),
   season: one(seasons, { fields: [rosterEntries.seasonId], references: [seasons.id] }),
+}))
+
+export const playerHoleNotesRelations = relations(playerHoleNotes, ({ one }) => ({
+  user: one(users, { fields: [playerHoleNotes.userId], references: [users.id] }),
 }))

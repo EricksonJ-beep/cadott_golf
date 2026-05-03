@@ -10,15 +10,17 @@ const tabs = [
   { id: 'leaderboard',label: 'Board',    icon: '🏆' },
   { id: 'stats',     label: 'Stats',     icon: '📊' },
   { id: 'rounds',    label: 'Rounds',    icon: '⛳' },
+  { id: 'courses',   label: 'Courses',   icon: '🗺️' },
   { id: 'rules',     label: 'Rules',     icon: '📖' },
 ]
 
 export default function TabNav() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const activeTab = searchParams.get('tab') ?? 'info'
+  const activeTab = searchParams.get('tab')
 
   if (!pathname.startsWith('/dashboard')) return null
+  if (!activeTab) return null
 
   return (
     <nav className="sticky top-14 z-30 bg-white border-b border-zinc-200">

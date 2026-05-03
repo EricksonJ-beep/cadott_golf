@@ -15,6 +15,13 @@
       "when": 1777653520874,
       "tag": "0001_cynical_earthquake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777814853439,
+      "tag": "0002_round_tiger_shark",
+      "breakpoints": true
     }
   ]
 }

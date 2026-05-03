@@ -47,21 +47,20 @@ export async function createPlayer(prevState: string | null, formData: FormData)
 
   const name = (formData.get('name') as string)?.trim()
   const username = (formData.get('username') as string)?.trim().toLowerCase()
-  const tempPassword = (formData.get('tempPassword') as string)?.trim()
   const roleRaw = (formData.get('role') as string) || 'player'
   const role: 'player' | 'coach' = roleRaw === 'coach' ? 'coach' : 'player'
   const grade = role === 'coach'
     ? null
     : (formData.get('grade') ? Number(formData.get('grade')) : null)
 
-  if (!name || !username || !tempPassword) return 'Name, username, and temporary password are required.'
-  if (tempPassword.length < 6) return 'Temporary password must be at least 6 characters.'
+  if (!name || !username) return 'Name and username are required.'
 
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1)
   if (existing.length > 0) return `Username "${username}" is already taken.`
 
   // 'worker' is a coach-owned test account, exempt from forced password change
   const isTestAccount = username === 'worker'
+  const tempPassword = isTestAccount ? 'worker' : 'cadottgolf'
 
   const hash = await bcrypt.hash(tempPassword, 12)
   await db.insert(users).values({

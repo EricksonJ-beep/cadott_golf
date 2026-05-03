@@ -94,11 +94,10 @@ export default function CreatePlayerForm() {
                 <Input id="grade" name="grade" type="number" inputMode="numeric" min={9} max={12} className="h-11" placeholder="10" />
               </div>
             )}
-            <div className="space-y-1 col-span-2">
-              <Label htmlFor="tempPassword">Temporary Password</Label>
-              <Input id="tempPassword" name="tempPassword" required className="h-11" placeholder="Cadott2026" />
+            <div className="col-span-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
               <p className="text-xs text-muted-foreground">
-                {role === 'coach' ? 'Coach' : 'Player'} will be prompted to change this on first login.
+                Temporary password will be <span className="font-mono font-semibold text-zinc-900">cadottgolf</span>.
+                {' '}{role === 'coach' ? 'Coach' : 'Player'} will be prompted to change it on first login.
               </p>
             </div>
           </div>

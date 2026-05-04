@@ -37,6 +37,20 @@ export const COURSE_SCORECARDS: CourseScorecard[] = [
       white: [317, 154, 164, 442, 347, 565, 399, 479, 378, 127, 455, 392, 360, 336, 566, 377, 131, 430],
       blue: [327, 206, 170, 465, 364, 586, 421, 502, 411, 132, 465, 426, 373, 347, 601, 382, 150, 441],
     },
+    generalTips: `General mindset:
+Play the percentages and trust your game. The course rewards thoughtful play — center fairways, middle of greens, take your pars happily, and attack the scoring holes (#1, #8, #14, #17). On the replicas, respect the design — these holes have a preferred shot for a reason, and hitting it feels great.
+
+Key takeaways:
+• Respect and enjoy the replicas. Each of the 7 replica holes (#3, #4, #6, #10, #11, #12, #18) was modeled after a famous hole because the original is iconic. Play the way the design intends and you'll score.
+• The two long par 5s (#6 and #15) reward patience. Three smart shots, no heroics needed.
+• Wind on #10 (Island Green) usually blows into the player. Take an extra club, aim center, and enjoy the moment.
+• Bluegrass fairways grip the club — commit fully through impact.
+• Know where the boundaries are — white stakes, fences, and roadways. Awareness builds confidence.
+• Leave putts below the hole when you can — most greens slope back-to-front (especially #1, #16) and uphill putts roll truer.
+• Best scoring holes from the White tees: #1 (317-yd par 4), #8 (479-yd reachable par 5), #11 (455-yd Azalea), #14 (336-yd par 4), #17 (131-yd par 3).
+• Championship tests: #4 (Oakland Hills "Monster"), #6 (Firestone), #15 (566-yd par 5) — happy to take pars, thrilled with bogey.
+• Replica par 3 strategy: Center of the green on #3 and #10 is the smart, satisfying play.
+• Closing stretch (#16, #17, #18) is dramatic and memorable — a fitting finish where committed swings get rewarded.`,
   },
   {
     id: 'river-edge-golf-course-marshfield',

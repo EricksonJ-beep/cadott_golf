@@ -175,6 +175,50 @@ export async function getMySeasonSummary() {
   }
 }
 
+export async function getTeamSeasonStats() {
+  await requireUser()
+
+  const season = await getCurrentSeason()
+  if (!season) return null
+
+  const [summary] = await db
+    .select({
+      avgPar3: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 3)::float`,
+      avgPar4: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 4)::float`,
+      avgPar5: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 5)::float`,
+      par3Holes: sql<number>`count(*) filter (where ${roundHoles.par} = 3)::int`,
+      par4Holes: sql<number>`count(*) filter (where ${roundHoles.par} = 4)::int`,
+      par5Holes: sql<number>`count(*) filter (where ${roundHoles.par} = 5)::int`,
+      birdies: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = -1)::int`,
+      pars: sql<number>`count(*) filter (where ${roundHoles.score} = ${roundHoles.par})::int`,
+      avgScore9: sql<number | null>`avg(${rounds.totalScore}) filter (where ${rounds.holesPlayed} = 9)::float`,
+      avgScore18: sql<number | null>`avg(${rounds.totalScore}) filter (where ${rounds.holesPlayed} = 18)::float`,
+      rounds9: sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 9)::int`,
+      rounds18: sql<number>`count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 18)::int`,
+      players: sql<number>`count(distinct ${rounds.userId})::int`,
+    })
+    .from(rounds)
+    .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))
+    .where(eq(rounds.seasonId, season.id))
+
+  return {
+    seasonName: season.name,
+    avgPar3: summary?.avgPar3 ?? null,
+    avgPar4: summary?.avgPar4 ?? null,
+    avgPar5: summary?.avgPar5 ?? null,
+    par3Holes: summary?.par3Holes ?? 0,
+    par4Holes: summary?.par4Holes ?? 0,
+    par5Holes: summary?.par5Holes ?? 0,
+    birdies: summary?.birdies ?? 0,
+    pars: summary?.pars ?? 0,
+    avgScore9: summary?.avgScore9 ?? null,
+    avgScore18: summary?.avgScore18 ?? null,
+    rounds9: summary?.rounds9 ?? 0,
+    rounds18: summary?.rounds18 ?? 0,
+    players: summary?.players ?? 0,
+  }
+}
+
 export async function getMyBadges(): Promise<EarnedMap> {
   const session = await requireUser()
   const userId = Number(session.user!.id)

@@ -6,12 +6,14 @@ import {
   getMySeasonSummary,
   getMyBadges,
   getMyStreaks,
+  getTeamSeasonStats,
 } from '@/app/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import TrendChart from './TrendChart'
 import SeasonAveragesCard from './SeasonAveragesCard'
 import CourseStatsCard from './CourseStatsCard'
+import TeamStatsCard from './TeamStatsCard'
 import TrophyRoom from './TrophyRoom'
 import StreaksCard from './StreaksCard'
 
@@ -38,22 +40,26 @@ function formatScore(
 }
 
 export default async function StatsTab(_props: { userId: number }) {
-  const [bests, mostLogged, records, season, badges, streaks] = await Promise.all([
+  const [bests, mostLogged, records, season, badges, streaks, team] = await Promise.all([
     getMyPersonalBests(),
     getMyMostLoggedChallenge(),
     getMyRoundRecords(),
     getMySeasonSummary(),
     getMyBadges(),
     getMyStreaks(),
+    getTeamSeasonStats(),
   ])
 
   const hasAnyBadge = Object.values(badges).some((v) => v !== null)
+
+  const hasTeamData = team != null && team.rounds9 + team.rounds18 > 0
 
   if (
     bests.length === 0 &&
     records.allTimeRounds === 0 &&
     (!season || season.rounds9 + season.rounds18 === 0) &&
-    !hasAnyBadge
+    !hasAnyBadge &&
+    !hasTeamData
   ) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -69,6 +75,8 @@ export default async function StatsTab(_props: { userId: number }) {
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-bold">Stats</h2>
+
+      {team && <TeamStatsCard team={team} />}
 
       {season && (
         <CourseStatsCard

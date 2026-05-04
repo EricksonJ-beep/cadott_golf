@@ -63,22 +63,35 @@ export default function CreateChallengeForm() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="category">Category</Label>
-              <Select name="category" defaultValue="putting">
-                <SelectTrigger id="category" className="h-11">
+              <Label htmlFor="kind">Season</Label>
+              <Select name="kind" defaultValue="regular">
+                <SelectTrigger id="kind" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="putting">Putting</SelectItem>
-                  <SelectItem value="chipping">Chipping</SelectItem>
-                  <SelectItem value="bunker">Bunker</SelectItem>
-                  <SelectItem value="driving">Driving</SelectItem>
-                  <SelectItem value="approach">Approach</SelectItem>
-                  <SelectItem value="wedges">Wedges</SelectItem>
-                  <SelectItem value="course_stats">Course Stats</SelectItem>
+                  <SelectItem value="regular">Regular</SelectItem>
+                  <SelectItem value="offseason">Offseason</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="category">Category</Label>
+            <Select name="category" defaultValue="putting">
+              <SelectTrigger id="category" className="h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="putting">Putting</SelectItem>
+                <SelectItem value="chipping">Chipping</SelectItem>
+                <SelectItem value="bunker">Bunker</SelectItem>
+                <SelectItem value="driving">Driving</SelectItem>
+                <SelectItem value="approach">Approach</SelectItem>
+                <SelectItem value="wedges">Wedges</SelectItem>
+                <SelectItem value="course_stats">Course Stats</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1">

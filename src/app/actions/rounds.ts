@@ -1,11 +1,12 @@
 'use server'
 
 import { db } from '@/db'
-import { rounds, roundHoles, seasons } from '@/db/schema'
+import { rounds, roundHoles } from '@/db/schema'
 import { asc, desc, eq, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { getSeasonIdForDate } from '@/lib/seasons'
 
 async function requireUser() {
   const session = await auth()
@@ -92,7 +93,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
 
   const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
 
-  const [activeSeason] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
+  const seasonId = await getSeasonIdForDate(date)
 
   const [inserted] = await db
     .insert(rounds)
@@ -106,7 +107,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
       totalScore,
       weatherNotes,
       freeTextNotes,
-      seasonId: activeSeason?.id ?? null,
+      seasonId,
     })
     .returning({ id: rounds.id })
 

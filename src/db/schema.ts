@@ -20,6 +20,7 @@ export const challengeCategoryEnum = pgEnum('challenge_category', [
   'putting', 'chipping', 'bunker', 'driving', 'approach', 'wedges', 'course_stats',
 ])
 export const scoringTypeEnum = pgEnum('scoring_type', ['score_out_of', 'makes_in_a_row', 'pass_fail', 'count'])
+export const seasonKindEnum = pgEnum('season_kind', ['regular', 'offseason'])
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 export const users = pgTable('users', {
@@ -44,6 +45,7 @@ export const seasons = pgTable('seasons', {
   startDate: date('start_date').notNull(),
   endDate: date('end_date').notNull(),
   isActive: boolean('is_active').notNull().default(false),
+  kind: seasonKindEnum('kind').notNull().default('regular'),
 })
 
 // ── Roster entries ────────────────────────────────────────────────────────────
@@ -124,6 +126,7 @@ export const challenges = pgTable('challenges', {
   maxScore: integer('max_score'),
   isFeatured: boolean('is_featured').notNull().default(false),
   isActive: boolean('is_active').notNull().default(true),
+  kind: seasonKindEnum('kind').notNull().default('regular'),
   createdBy: integer('created_by').references(() => users.id),
 })
 

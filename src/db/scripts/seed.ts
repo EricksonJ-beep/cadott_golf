@@ -169,18 +169,43 @@ async function main() {
     console.log('  Coach account already exists, skipping')
   }
 
-  // Active season
+  // Active season (regular)
   const existingSeasons = await db.select().from(schema.seasons)
   if (existingSeasons.length === 0) {
     await db.insert(schema.seasons).values({
       name: 'Spring 2026',
       startDate: '2026-03-01',
-      endDate: '2026-06-30',
+      endDate: '2026-06-09',
       isActive: true,
+      kind: 'regular',
     })
     console.log('✓ Spring 2026 season created')
   } else {
-    console.log('  Season already exists, skipping')
+    // Normalize Spring 2026 end-date so it doesn't overlap the new offseason window
+    await db
+      .update(schema.seasons)
+      .set({ endDate: '2026-06-09' })
+      .where(eq(schema.seasons.name, 'Spring 2026'))
+    console.log('  Season already exists, normalized Spring 2026 end date to 2026-06-09')
+  }
+
+  // Offseason (2026–27)
+  const offseasonExists = await db
+    .select()
+    .from(schema.seasons)
+    .where(eq(schema.seasons.name, '2026–27 Offseason'))
+    .limit(1)
+  if (offseasonExists.length === 0) {
+    await db.insert(schema.seasons).values({
+      name: '2026–27 Offseason',
+      startDate: '2026-06-10',
+      endDate: '2027-03-30',
+      isActive: true,
+      kind: 'offseason',
+    })
+    console.log('✓ 2026–27 Offseason created')
+  } else {
+    console.log('  Offseason already exists, skipping')
   }
 
   // Placeholder practice plans

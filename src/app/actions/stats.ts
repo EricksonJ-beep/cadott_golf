@@ -1,11 +1,12 @@
 'use server'
 
 import { db } from '@/db'
-import { challenges, challengeResults, seasons, historicalSeasonStats, rounds, roundHoles } from '@/db/schema'
+import { challenges, challengeResults, historicalSeasonStats, rounds, roundHoles } from '@/db/schema'
 import { and, asc, desc, eq, inArray, max, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { BADGE_DEFS, computeEarnedBadges, type EarnedMap, type RoundForBadges } from '@/lib/badges'
+import { getCurrentSeason } from '@/lib/seasons'
 
 async function requireUser() {
   const session = await auth()
@@ -75,7 +76,7 @@ export async function getMyMostLoggedChallenge() {
 }
 
 export async function getActiveSeasonName() {
-  const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
+  const season = await getCurrentSeason()
   return season?.name ?? null
 }
 
@@ -131,7 +132,7 @@ export async function getMySeasonSummary() {
   const session = await requireUser()
   const userId = Number(session.user!.id)
 
-  const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
+  const season = await getCurrentSeason()
   if (!season) return null
 
   const [summary] = await db

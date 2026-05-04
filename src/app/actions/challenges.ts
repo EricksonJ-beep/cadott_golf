@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { isHigherScoreBetter } from '@/lib/challenge-scoring'
+import { getCurrentSeasonByKind, getCurrentSeasonKind, getMostRecentSeasonByKind } from '@/lib/seasons'
 
 async function requireUser() {
   const session = await auth()
@@ -20,16 +21,12 @@ async function requireCoach() {
   return session
 }
 
-export async function getActiveSeason() {
-  const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
-  return season ?? null
-}
-
 export async function getActiveChallenges() {
+  const kind = await getCurrentSeasonKind()
   return db
     .select()
     .from(challenges)
-    .where(eq(challenges.isActive, true))
+    .where(and(eq(challenges.isActive, true), eq(challenges.kind, kind)))
     .orderBy(
       desc(challenges.isFeatured),
       challenges.category,
@@ -92,14 +89,17 @@ export async function getMyChallengeResults(challengeId: number) {
 }
 
 export async function getSeasonLeaderboard(challengeId: number) {
-  const season = await getActiveSeason()
-  if (!season) return []
-
   const challenge = await getChallenge(challengeId)
-  if (!challenge) return []
+  if (!challenge) return { rows: [], seasonName: null }
+
+  const season =
+    (await getCurrentSeasonByKind(challenge.kind)) ??
+    (await getMostRecentSeasonByKind(challenge.kind))
+  if (!season) return { rows: [], seasonName: null }
+
   const higherIsBetter = isHigherScoreBetter(challenge)
 
-  const rows = await db
+  const dbRows = await db
     .select({
       userId: challengeResults.userId,
       name: users.name,
@@ -116,7 +116,7 @@ export async function getSeasonLeaderboard(challengeId: number) {
     )
     .groupBy(challengeResults.userId, users.name)
 
-  return rows
+  const rows = dbRows
     .map((row) => ({
       userId: row.userId,
       name: row.name,
@@ -128,6 +128,8 @@ export async function getSeasonLeaderboard(challengeId: number) {
       return higherIsBetter ? right - left : left - right
     })
     .slice(0, 5)
+
+  return { rows, seasonName: season.name }
 }
 
 export async function getAllTimeRecord(challengeId: number) {
@@ -173,7 +175,9 @@ export async function logChallengeResult(_prevState: string | null, formData: Fo
     return `Score cannot exceed ${challenge.maxScore}.`
   }
 
-  const season = await getActiveSeason()
+  const season =
+    (await getCurrentSeasonByKind(challenge.kind)) ??
+    (await getMostRecentSeasonByKind(challenge.kind))
 
   await db.insert(challengeResults).values({
     userId,
@@ -216,6 +220,7 @@ export async function createChallenge(_prevState: string | null, formData: FormD
     | 'putting' | 'chipping' | 'bunker' | 'driving' | 'approach' | 'wedges' | 'course_stats'
   const scoringType = formData.get('scoringType') as
     | 'score_out_of' | 'makes_in_a_row' | 'pass_fail' | 'count'
+  const kind = (formData.get('kind') as 'regular' | 'offseason') || 'regular'
   const unit = ((formData.get('unit') as string) || '').trim() || null
   const description = ((formData.get('description') as string) || '').trim() || null
   const isFeatured = formData.get('isFeatured') === 'on'
@@ -230,6 +235,7 @@ export async function createChallenge(_prevState: string | null, formData: FormD
     type,
     category,
     scoringType,
+    kind,
     unit,
     description,
     maxScore,

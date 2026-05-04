@@ -4,6 +4,7 @@ import { db } from '@/db'
 import { rounds, roundHoles, users, seasons, challenges, challengeResults } from '@/db/schema'
 import { and, asc, desc, eq, isNotNull, max, sql } from 'drizzle-orm'
 import { isHigherScoreBetter } from '@/lib/challenge-scoring'
+import { getCurrentSeason } from '@/lib/seasons'
 
 type BoardRow = { userId: number; name: string; count: number }
 type Board = {
@@ -48,7 +49,7 @@ export type LeaderboardSnapshot = {
 }
 
 async function getActiveSeasonId(): Promise<number | null> {
-  const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true)).limit(1)
+  const season = await getCurrentSeason()
   return season?.id ?? null
 }
 

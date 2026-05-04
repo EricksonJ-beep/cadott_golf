@@ -3,7 +3,6 @@ import {
   getMyChallengeResults,
   getSeasonLeaderboard,
   getAllTimeRecord,
-  getActiveSeason,
 } from '@/app/actions/challenges'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
@@ -34,13 +33,13 @@ export default async function ChallengeDetailPage({ params }: Props) {
   const challengeId = Number(id)
   if (!challengeId) notFound()
 
-  const [challenge, season, seasonRows, allTime, myResults] = await Promise.all([
+  const [challenge, leaderboard, allTime, myResults] = await Promise.all([
     getChallenge(challengeId),
-    getActiveSeason(),
     getSeasonLeaderboard(challengeId),
     getAllTimeRecord(challengeId),
     getMyChallengeResults(challengeId),
   ])
+  const { rows: seasonRows, seasonName } = leaderboard
 
   if (!challenge) notFound()
 
@@ -96,7 +95,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
         />
 
         <Leaderboard
-          seasonName={season?.name ?? null}
+          seasonName={seasonName}
           seasonRows={seasonRows}
           allTime={allTime}
           formatScore={formatScore}

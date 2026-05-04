@@ -12,6 +12,7 @@ type Challenge = {
   type: 'range' | 'course'
   category: string
   scoringType: string
+  kind: 'regular' | 'offseason'
   maxScore: number | null
   unit: string | null
   description: string | null
@@ -70,6 +71,12 @@ export default function ChallengeList({ challenges }: { challenges: Challenge[] 
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   <Badge variant="secondary" className="text-[10px]">
                     {c.type === 'range' ? 'Range' : 'Course'}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] ${c.kind === 'offseason' ? 'border-blue-400 text-blue-700' : ''}`}
+                  >
+                    {c.kind === 'offseason' ? 'Offseason' : 'Regular'}
                   </Badge>
                   <Badge variant="outline" className="text-[10px]">
                     {CATEGORY_LABEL[c.category]}

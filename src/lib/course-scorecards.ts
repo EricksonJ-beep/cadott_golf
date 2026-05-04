@@ -10,6 +10,8 @@ export type CourseScorecard = {
   parByHole: number[] | null
   hcpByHole: number[] | null
   yardageByTee: Record<TeeColor, number[] | null>
+  // Optional course-level strategy shown above the hole-by-hole list.
+  generalTips?: string
 }
 
 export const DEFAULT_TEE_COLOR: TeeColor = 'white'
@@ -64,6 +66,20 @@ export const COURSE_SCORECARDS: CourseScorecard[] = [
       white: [335, 339, 364, 187, 330, 131, 394, 336, 482, 344, 366, 185, 507, 337, 393, 130, 376, 458],
       blue: [417, 355, 412, 228, 431, 162, 488, 370, 532, 359, 434, 203, 518, 405, 428, 141, 461, 511],
     },
+    generalTips: `General mindset:
+Play to the middle of greens, prioritize accuracy over distance, keep the ball below the hole, and avoid the fescue at all costs. Bogey is often a great score on the toughest holes — don't compound mistakes.
+
+Key takeaways:
+• Yardage management is everything — elevation changes affect almost every shot. Always factor uphill/downhill into club selection.
+• Aim for the center of greens. Crowned greens with run-offs punish flag-hunters.
+• Otter Creek is in play on multiple holes (1, 5, 7, 11) — know where it is before each tee shot.
+• Fescue = penalty stroke. Don't try to advance the ball; pitch out and accept the bogey.
+• Greenside bunkers sit below the green surface. Up-and-downs are exceptionally hard — favor the long/wide miss when in doubt.
+• Stay below the hole. Greens are fast and slope back-to-front in most cases — above the hole leads to three-putts.
+• Toughest stretch: holes 3, 7, 11 (the three lowest handicap holes). Survive these and the round is in play.
+• Best birdie opportunities: holes 8, 9, 16 (if you hit the green), and 18.
+• Renovations completed 2020–2021 — bunkers and tees are in top condition. Sand is on the lower side, tees are excellent.
+• Wind matters more on elevated greens (especially holes 6 and 16) — adjust accordingly.`,
   },
   {
     id: 'whispering-pines-golf-cadott',

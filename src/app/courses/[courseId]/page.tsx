@@ -100,6 +100,19 @@ export default async function CourseGuidePage({ params }: Props) {
           </p>
         </div>
 
+        {course.generalTips && (
+          <Card className="border-[#FFD700]/40 bg-[#FFD700]/5">
+            <CardContent>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                General strategy
+              </p>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                {course.generalTips}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="space-y-3">
           {holeNumbers.map((n) => {
             const par = course.parByHole?.[n - 1] ?? null

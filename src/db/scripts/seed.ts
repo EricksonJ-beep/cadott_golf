@@ -34,7 +34,7 @@ const PLACEHOLDER_CHALLENGES = [
     type: 'range' as const,
     category: 'chipping' as const,
     scoringType: 'makes_in_a_row' as const,
-    description: 'Chip, then make the next putt. Score is consecutive successful up-and-downs.',
+    description: 'Chip from the rough (not the fringe), then make the next putt. Score is consecutive successful up-and-downs.',
   },
   {
     name: 'Chip Ladder',

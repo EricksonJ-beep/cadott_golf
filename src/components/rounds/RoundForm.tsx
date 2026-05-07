@@ -402,21 +402,14 @@ function HoleRow({
       ) : (
         <button
           type="button"
-          onClick={() =>
-            onChange(
-              'fairwayHit',
-              hole.fairwayHit === null ? true : hole.fairwayHit ? false : null,
-            )
-          }
+          onClick={() => onChange('fairwayHit', hole.fairwayHit === true ? null : true)}
           className={`h-9 rounded text-xs font-semibold ${
             hole.fairwayHit === true
               ? 'bg-green-100 text-green-700'
-              : hole.fairwayHit === false
-              ? 'bg-red-100 text-red-700'
               : 'bg-zinc-100 text-zinc-400'
           }`}
         >
-          {hole.fairwayHit === true ? '✓' : hole.fairwayHit === false ? '✗' : '·'}
+          {hole.fairwayHit === true ? '✓' : '·'}
         </button>
       )}
 

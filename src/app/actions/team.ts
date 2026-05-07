@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/db'
-import { rounds, roundHoles, users, challengeResults } from '@/db/schema'
+import { rounds, roundHoles, users, challengeResults, playerClubs } from '@/db/schema'
 import { desc, eq, sql } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -104,4 +104,19 @@ export async function getPlayerSummary(userId: number) {
     .limit(5)
 
   return { user, summary: roundSummary, recentRounds }
+}
+
+export async function getPlayerClubs(userId: number) {
+  await requireCoach()
+
+  return db.query.playerClubs.findMany({
+    where: eq(playerClubs.userId, userId),
+    with: {
+      defaultClub: true,
+      distances: {
+        orderBy: (d, { desc }) => [desc(d.dateLogged), desc(d.id)],
+      },
+    },
+    orderBy: (c, { asc }) => [asc(c.orderIndex)],
+  })
 }

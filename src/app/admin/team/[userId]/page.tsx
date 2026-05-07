@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPlayerSummary } from '@/app/actions/team'
+import { getPlayerSummary, getPlayerClubs } from '@/app/actions/team'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import PlayerYardagesCard from '@/components/admin/PlayerYardagesCard'
 
 type Props = { params: Promise<{ userId: string }> }
 
 export default async function PlayerDetailPage({ params }: Props) {
   const { userId } = await params
-  const data = await getPlayerSummary(Number(userId))
+  const id = Number(userId)
+  const [data, clubs] = await Promise.all([getPlayerSummary(id), getPlayerClubs(id)])
   if (!data) notFound()
 
   const { user, summary, recentRounds } = data
@@ -76,6 +78,8 @@ export default async function PlayerDetailPage({ params }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <PlayerYardagesCard clubs={clubs} />
 
       {recentRounds.length > 0 && (
         <Card>

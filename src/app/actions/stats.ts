@@ -149,7 +149,7 @@ export async function getMySeasonSummary() {
       girTotal:        sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
       girHoles:        sql<number>`count(${roundHoles.id})::int`,
       firHit:          sql<number>`count(*) filter (where ${roundHoles.fairwayHit} = true)::int`,
-      firOpportunities: sql<number>`count(*) filter (where ${roundHoles.par} >= 4 and ${roundHoles.fairwayHit} is not null)::int`,
+      firOpportunities: sql<number>`count(*) filter (where ${roundHoles.par} >= 4)::int`,
       avgPutts18:      sql<number | null>`(sum(${roundHoles.putts}) filter (where ${rounds.holesPlayed} = 18))::float / nullif(count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 18), 0)`,
       avgPutts9:       sql<number | null>`(sum(${roundHoles.putts}) filter (where ${rounds.holesPlayed} = 9))::float / nullif(count(distinct ${rounds.id}) filter (where ${rounds.holesPlayed} = 9), 0)`,
     })
@@ -217,6 +217,66 @@ export async function getTeamSeasonStats() {
     rounds18: summary?.rounds18 ?? 0,
     players: summary?.players ?? 0,
   }
+}
+
+export async function getMyPersonalRoundBests() {
+  const session = await requireUser()
+  const userId = Number(session.user!.id)
+
+  const userRounds = await db
+    .select({ id: rounds.id, holesPlayed: rounds.holesPlayed })
+    .from(rounds)
+    .where(eq(rounds.userId, userId))
+
+  if (userRounds.length === 0) {
+    return { bestFirPct: null, bestGirPct: null, lowestPutts18: null, lowestPutts9: null }
+  }
+
+  const roundIds = userRounds.map((r) => r.id)
+  const holes = await db
+    .select({
+      roundId: roundHoles.roundId,
+      par: roundHoles.par,
+      putts: roundHoles.putts,
+      gir: roundHoles.gir,
+      fairwayHit: roundHoles.fairwayHit,
+    })
+    .from(roundHoles)
+    .where(inArray(roundHoles.roundId, roundIds))
+
+  const holesByRound = new Map<number, typeof holes>()
+  for (const h of holes) {
+    if (!holesByRound.has(h.roundId)) holesByRound.set(h.roundId, [])
+    holesByRound.get(h.roundId)!.push(h)
+  }
+
+  let bestFirPct: number | null = null
+  let bestGirPct: number | null = null
+  let lowestPutts18: number | null = null
+  let lowestPutts9: number | null = null
+
+  for (const r of userRounds) {
+    const hs = holesByRound.get(r.id) ?? []
+    if (hs.length === 0) continue
+
+    const girPct = hs.filter((h) => h.gir).length / hs.length
+    if (bestGirPct === null || girPct > bestGirPct) bestGirPct = girPct
+
+    const firHoles = hs.filter((h) => h.par >= 4)
+    if (firHoles.length > 0) {
+      const firPct = firHoles.filter((h) => h.fairwayHit === true).length / firHoles.length
+      if (bestFirPct === null || firPct > bestFirPct) bestFirPct = firPct
+    }
+
+    const totalPutts = hs.reduce((s, h) => s + h.putts, 0)
+    if (r.holesPlayed === 18) {
+      if (lowestPutts18 === null || totalPutts < lowestPutts18) lowestPutts18 = totalPutts
+    } else if (r.holesPlayed === 9) {
+      if (lowestPutts9 === null || totalPutts < lowestPutts9) lowestPutts9 = totalPutts
+    }
+  }
+
+  return { bestFirPct, bestGirPct, lowestPutts18, lowestPutts9 }
 }
 
 export async function getMyBadges(): Promise<EarnedMap> {

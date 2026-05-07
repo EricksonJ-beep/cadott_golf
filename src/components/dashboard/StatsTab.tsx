@@ -7,6 +7,7 @@ import {
   getMyBadges,
   getMyStreaks,
   getTeamSeasonStats,
+  getMyPersonalRoundBests,
 } from '@/app/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,7 @@ import CourseStatsCard from './CourseStatsCard'
 import TeamStatsCard from './TeamStatsCard'
 import TrophyRoom from './TrophyRoom'
 import StreaksCard from './StreaksCard'
+import RoundBestsCard from './RoundBestsCard'
 
 const CATEGORY_LABEL: Record<string, string> = {
   putting: 'Putting',
@@ -40,7 +42,7 @@ function formatScore(
 }
 
 export default async function StatsTab(_props: { userId: number }) {
-  const [bests, mostLogged, records, season, badges, streaks, team] = await Promise.all([
+  const [bests, mostLogged, records, season, badges, streaks, team, roundBests] = await Promise.all([
     getMyPersonalBests(),
     getMyMostLoggedChallenge(),
     getMyRoundRecords(),
@@ -48,6 +50,7 @@ export default async function StatsTab(_props: { userId: number }) {
     getMyBadges(),
     getMyStreaks(),
     getTeamSeasonStats(),
+    getMyPersonalRoundBests(),
   ])
 
   const hasAnyBadge = Object.values(badges).some((v) => v !== null)
@@ -86,6 +89,13 @@ export default async function StatsTab(_props: { userId: number }) {
           avgPutts9={season.avgPutts9}
         />
       )}
+
+      <RoundBestsCard
+        bestGirPct={roundBests.bestGirPct}
+        bestFirPct={roundBests.bestFirPct}
+        lowestPutts18={roundBests.lowestPutts18}
+        lowestPutts9={roundBests.lowestPutts9}
+      />
 
       {season && <SeasonAveragesCard summary={season} />}
 

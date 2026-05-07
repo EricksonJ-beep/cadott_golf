@@ -122,7 +122,7 @@ export default async function RoundDetailPage({ params }: Props) {
                     <span className={`tabular-nums ${diffClass(diff)}`}>{h.score}</span>
                     <span className={`text-[10px] ${diffClass(diff)}`}>{scoreLabel(diff)}</span>
                     <span className="text-center text-xs">
-                      {h.fairwayHit === true ? '✓' : h.fairwayHit === false ? '✗' : '—'}
+                      {h.par === 3 ? '—' : h.fairwayHit === true ? '✓' : '·'}
                     </span>
                     <span className="text-center text-xs">{h.gir ? '✓' : '·'}</span>
                     <span className="tabular-nums">{h.putts}</span>

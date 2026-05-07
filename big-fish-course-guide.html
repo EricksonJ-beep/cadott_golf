@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big Fish Golf Club — Course Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --forest: #1a3a2a;
+    --forest-deep: #122a1f;
+    --cream: #f5f0e8;
+    --cream-soft: #ece5d7;
+    --gold: #c9a84c;
+    --gold-soft: #d9bd6e;
+    --ink: #1f1a14;
+    --ink-soft: #4a423a;
+    --warn: #a83e2b;
+    --warn-soft: #c25b48;
+    --line: #d8cfbe;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background:
+      linear-gradient(180deg, rgba(18,42,31,0.92), rgba(26,58,42,0.88)),
+      radial-gradient(circle at 30% 20%, #2a5b40 0%, transparent 55%);
+    background-color: var(--forest-deep);
+    color: var(--cream);
+    padding: 56px 20px 48px;
+    margin-bottom: 28px;
+    border-bottom: 4px solid var(--gold);
+  }
+  .hero-inner {
+    max-width: 980px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    color: var(--gold-soft);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.05;
+    margin: 0 0 8px;
+    letter-spacing: 0.01em;
+  }
+  .hero .location {
+    font-style: italic;
+    color: var(--cream-soft);
+    margin-bottom: 28px;
+    font-size: 1rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 720px;
+    margin: 0 auto 24px;
+  }
+  .stat {
+    border: 1px solid rgba(217,189,110,0.4);
+    border-radius: 4px;
+    padding: 14px 10px;
+    background: rgba(0,0,0,0.18);
+  }
+  .stat .label {
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin-bottom: 6px;
+  }
+  .stat .value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.1;
+  }
+  .stat .value small {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--cream-soft);
+    display: block;
+    margin-top: 2px;
+  }
+  .architect {
+    font-style: italic;
+    font-size: 0.92rem;
+    color: var(--cream-soft);
+  }
+  .architect strong {
+    color: var(--gold-soft);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  /* ---------- Section headers ---------- */
+  .section-header {
+    margin: 36px 0 14px;
+    text-align: center;
+  }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    margin: 0;
+    color: var(--forest);
+    letter-spacing: 0.02em;
+  }
+  .section-header .sub {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    font-size: 0.95rem;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+    letter-spacing: 0.02em;
+  }
+  .hint::before, .hint::after {
+    content: "—";
+    margin: 0 10px;
+    color: var(--gold);
+  }
+
+  /* ---------- Hole list ---------- */
+  .holes {
+    border-top: 1px solid var(--line);
+  }
+  .hole {
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+  }
+  .hole-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 56px 56px 88px 88px 22px;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 160ms ease;
+  }
+  .hole-row:hover { background: var(--cream-soft); }
+  .hole-row:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: -2px;
+  }
+
+  .hole-num {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 2.1rem;
+    line-height: 1;
+    color: var(--forest);
+    text-align: center;
+    width: 64px;
+  }
+  .hole-meta .name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .hole-meta .name em {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  .hole-meta .micro {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .col-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 2px;
+  }
+  .col-val {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--forest);
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+  .col-val small {
+    display: block;
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: 0.7rem;
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .chev {
+    color: var(--gold);
+    transition: transform 220ms ease;
+    font-size: 1.2rem;
+    text-align: center;
+    line-height: 1;
+  }
+  .hole.open .chev { transform: rotate(90deg); }
+
+  /* ---------- Detail panel ---------- */
+  .panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 320ms ease;
+    background: var(--cream-soft);
+    border-top: 1px solid transparent;
+  }
+  .hole.open .panel {
+    border-top-color: var(--gold);
+  }
+  .panel-inner {
+    padding: 18px 22px 22px;
+    border-left: 3px solid var(--gold);
+    margin: 14px 14px 14px;
+    background: #fbf7ee;
+  }
+  .panel-inner p {
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+  .panel-inner p:last-child { margin-bottom: 0; }
+  .tip-label {
+    display: inline-block;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 0.04em;
+    margin-right: 6px;
+  }
+  .tip {
+    color: var(--ink);
+  }
+  .tip.warn .tip-label { color: var(--warn); }
+  .tip.warn { color: var(--warn); }
+
+  /* ---------- Subtotals ---------- */
+  .subtotal {
+    display: grid;
+    grid-template-columns: 64px 1fr 56px 56px 88px 88px 22px;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 14px;
+    background: var(--forest);
+    color: var(--cream);
+    border-bottom: 1px solid var(--line);
+  }
+  .subtotal .lbl {
+    grid-column: 1 / span 2;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+  }
+  .subtotal .lbl small {
+    display: block;
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold-soft);
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    margin-top: 2px;
+  }
+  .subtotal .val {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--cream);
+    font-size: 1rem;
+  }
+  .subtotal .val small {
+    display: block;
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 400;
+    color: var(--gold-soft);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .subtotal.par-cell { text-align: left; }
+
+  .grand-total {
+    margin-top: 28px;
+    background: var(--forest-deep);
+    color: var(--cream);
+    border-top: 4px solid var(--gold);
+    padding: 22px;
+    text-align: center;
+  }
+  .grand-total .num {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 2.1rem;
+    color: var(--gold-soft);
+    letter-spacing: 0.04em;
+  }
+  .grand-total .num span { color: var(--cream); margin: 0 14px; opacity: 0.4; }
+  .grand-total .label {
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cream-soft);
+    margin-top: 6px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  footer .name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--forest);
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+  footer .rule {
+    width: 60px;
+    height: 1px;
+    background: var(--gold);
+    margin: 14px auto;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 720px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .hole-row {
+      grid-template-columns: 48px 1fr 44px 76px 18px;
+      gap: 8px;
+      padding: 12px 10px;
+    }
+    .hole-num { font-size: 1.7rem; width: 48px; }
+    .hole-meta .name { font-size: 1rem; }
+    /* Hide handicap + member yardage columns on mobile, keep par + championship */
+    .hole-row .col-hdcp,
+    .hole-row .col-member { display: none; }
+    .col-val { font-size: 0.95rem; }
+    .subtotal {
+      grid-template-columns: 1fr auto auto;
+      gap: 14px;
+      padding: 12px 12px;
+    }
+    .subtotal .lbl { grid-column: auto; }
+    .subtotal .val.hdcp-val,
+    .subtotal .val.member-val { display: none; }
+    .panel-inner { margin: 10px 10px 12px; padding: 14px 16px 16px; }
+    .grand-total .num { font-size: 1.55rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Course Guide</div>
+    <h1>Big Fish Golf Club</h1>
+    <div class="location">Hayward, Wisconsin</div>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="label">Par</div>
+        <div class="value">72</div>
+      </div>
+      <div class="stat">
+        <div class="label">Yardage</div>
+        <div class="value">7,231<small>Championship</small></div>
+      </div>
+      <div class="stat">
+        <div class="label">Rating / Slope</div>
+        <div class="value">74.0 / 136</div>
+      </div>
+      <div class="stat">
+        <div class="label">Opened</div>
+        <div class="value">2004</div>
+      </div>
+    </div>
+
+    <p class="architect">Designed by <strong>Pete Dye</strong> &amp; <strong>Timothy Liddy</strong></p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <div class="section-header">
+      <h2>Front Nine</h2>
+      <div class="sub">Par 36 &middot; 3,606 yards</div>
+    </div>
+    <p class="hint">Tap any hole to expand strategy &amp; tips</p>
+
+    <div class="holes" id="front-nine"></div>
+
+    <div class="subtotal">
+      <div class="lbl">Out<small>Front Nine Total</small></div>
+      <div class="val par-val">36<small>Par</small></div>
+      <div class="val hdcp-val">&mdash;<small>Hdcp</small></div>
+      <div class="val">3,606<small>Champ</small></div>
+      <div class="val member-val">3,012<small>Member</small></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <h2>Back Nine</h2>
+      <div class="sub">Par 36 &middot; 3,625 yards</div>
+    </div>
+    <p class="hint">Tap any hole to expand strategy &amp; tips</p>
+
+    <div class="holes" id="back-nine"></div>
+
+    <div class="subtotal">
+      <div class="lbl">In<small>Back Nine Total</small></div>
+      <div class="val par-val">36<small>Par</small></div>
+      <div class="val hdcp-val">&mdash;<small>Hdcp</small></div>
+      <div class="val">3,625<small>Champ</small></div>
+      <div class="val member-val">3,072<small>Member</small></div>
+    </div>
+  </section>
+
+  <div class="grand-total">
+    <div class="num">72<span>&middot;</span>7,231</div>
+    <div class="label">Par &nbsp;&middot;&nbsp; Total Yardage</div>
+  </div>
+
+  <footer>
+    <div class="rule"></div>
+    <div class="name">Big Fish Golf Club</div>
+    <div>14122 W. True North Lane &middot; Hayward, WI 54843</div>
+    <div>(715) 934-4770</div>
+    <div class="rule"></div>
+  </footer>
+
+</main>
+
+<script>
+  const HOLES = [
+    { num: 1, par: 4, hdcp: 18, champ: 412, member: 332, name: "Opening Act",
+      desc: "A welcoming start with a left-bending fairway offering a generous driving target. Don't be lulled — the real test begins on the green. The putting surfaces at Big Fish are exceptionally quick, and a back-left miss rolls off the fringe entirely.",
+      tip: "Hit center of the green, not at the flag. Three-putts are common here for first-timers who don't respect the speed." },
+
+    { num: 2, par: 5, hdcp: 8, champ: 555, member: 513, name: "Rolling Thunder",
+      desc: "The fairway rolls and filters right, with significant mounding on the right side that creates uneven lies. The rightward tilt leaves approaches from a ball-below-feet position — a tricky setup for a long second shot.",
+      tip: "Favor the left-center of the fairway off the tee to get a flatter lie for your second shot. Chasing the right side costs you a clean strike." },
+
+    { num: 3, par: 3, hdcp: 10, champ: 166, member: 137, name: "The Sand Moat",
+      desc: "A deceptively charming short par three. The multi-tiered green drops sharply to a bunker moat on the left. A center pin is manageable, but when the flag is on an upper or lower shelf, this becomes one of the trickiest one-shotters on the course.",
+      tip: "Know which tier the pin is on before selecting your club. Playing to the wrong level of the green from 150 yards out is a two-putt minimum — or worse." },
+
+    { num: 4, par: 4, hdcp: 2, champ: 517, member: 387, name: "Sandstorm", warn: true,
+      desc: "One of the longest par fours in Wisconsin at 517 yards from the tips. Sand lines the entire left side of the fairway, and the right side of the green complex is similarly punishing. The green itself is long front-to-back but very narrow laterally.",
+      tip: "Play from the correct tees. This hole is a different creature at 517 vs. 387. Attack right-center off the tee to avoid the left bunkers. On approach, take enough club — miss long before short-right." },
+
+    { num: 5, par: 4, hdcp: 14, champ: 375, member: 315, name: "The Serpent",
+      desc: "A serpentine bunker splits the approach area, steering players toward long and left. At 337 yards from the blues, this is a legitimate birdie opportunity if you follow the architecture's intent.",
+      tip: "Let the bunker tell you where to go — hit to the left side of the landing area. That leaves a short, clean approach and your best chance at birdie on the front nine." },
+
+    { num: 6, par: 4, hdcp: 6, champ: 458, member: 394, name: "Dye-Abolical", warn: true,
+      desc: "A punishing Pete Dye classic. The fairway tilts hard left, so even a right-side drive rolls toward trouble. The approach is to an elevated green with a front-right slope that dumps anything short into two bunkers and a depressed area — requiring an uphill flop shot to have any chance of holding.",
+      tip: "Par is a great score here. Accept the left-side approach, take enough club to clear the front bunkers, and aim at the center of the green. This is not a birdie hole." },
+
+    { num: 7, par: 5, hdcp: 4, champ: 560, member: 484, name: "The Signature",
+      desc: "The most memorable hole on the front. Water lines the entire left side as the fairway runs right-to-left, sloping toward the pond. A five-foot drop between the fairway and the water's edge forces precise recovery shots. Reachable in two, but the front-left bunker is deep and craggy — the worst place on the hole.",
+      tip: "Stay right off the tee and commit to right of center on your layup. Attacking the green in two is fine if you can carry 230+ yards over the water threat. Otherwise, lay up right and pitch on. Avoid front-left at all costs." },
+
+    { num: 8, par: 4, hdcp: 16, champ: 434, member: 346, name: "Old Farmstead",
+      desc: "A short, straightforward par four playing toward an old farm. The fairway runs slightly right and features several deep pot bunkers guarding the green. One of the more benign holes on the course from the fairway — but pot bunkers make greenside recovery tricky.",
+      tip: "The smart tee shot is to the 150-yard marker, leaving a clean mid-iron approach. Bombing the driver here risks running into the pot bunkers short of the green." },
+
+    { num: 9, par: 3, hdcp: 12, champ: 129, member: 104, name: "Mulligan's Farewell", warn: true,
+      desc: "A deceptive finisher to the front nine. Short at 123 yards from the blues, but the green tilts sharply uphill from front to back. Surrounding bunkers are among the most treacherous on the course. Speed control is nearly impossible from long range. The halfway house (Mulligan's) awaits just beyond.",
+      tip: "Take one extra club — the upslope kills distance. Miss on the lower portion of the green rather than going long. A putt from above the hole on this surface is a nightmare." },
+
+    { num: 10, par: 4, hdcp: 15, champ: 389, member: 347, name: "Wide Open",
+      desc: "A welcoming re-entry to play. The left side of the fairway is generous, running laterally toward a slightly elevated green. Two traps at back-left punish anything long. A confidence-builder before the real challenge begins.",
+      tip: "Use the wide left landing zone. The approach plays better from the left side. Watch the back bunkers — they catch more balls than they should at this distance." },
+
+    { num: 11, par: 4, hdcp: 17, champ: 380, member: 285, name: "Tall Timber",
+      desc: "A gorgeous par four tucked beyond the cart paths. The tee boxes sit well back among tall trees, and both shots must be hit accurately through a narrower corridor than the yardage suggests. The front-right trap has a tall berm that must be fully carried to access the undulating green.",
+      tip: "This plays longer than 345 yards — shape your tee shot straight and avoid the trees. Carry the front-right bunker completely; a half-carried shot hits the berm face and leaves a near-impossible recovery." },
+
+    { num: 12, par: 3, hdcp: 13, champ: 215, member: 149, name: "High Wire",
+      desc: "A highly elevated tee shot makes this par three play shorter than the number suggests. From 174 yards at the blue tees, a well-struck iron can set up a legitimate birdie. One of the best birdie opportunities on the entire course.",
+      tip: "Account for the elevation drop — take at least one less club than the yardage indicates. Find the center of the green and let the slope work for you on the putt." },
+
+    { num: 13, par: 5, hdcp: 9, champ: 525, member: 475, name: "Best in Wisconsin",
+      desc: "Widely regarded as one of the finest par fives in the state. After a generous driving area, the hole funnels left and drops dramatically downhill to a small green nestled between trees on three sides. The third shot from the upper fairway is 20+ feet below your feet — a stunning and disorienting approach.",
+      tip: "Don't rush to get home in two. The wide driving area rewards a big tee shot, but the layup position matters enormously. You want to be in the fairway — not in the trees right — when you play that dramatic downhill approach." },
+
+    { num: 14, par: 4, hdcp: 3, champ: 440, member: 351, name: "Uphill Battle",
+      desc: "Trees border the left side the entire length of this uphill par four. The tee shot can go right — even well right — as long as you don't reach the right tree line. Pot bunkers sit in the uphill approach area, and the crowned green complex can repel even well-struck approaches.",
+      tip: "Take more club than you think on the approach — the uphill grade adds at least one full club of distance needed. Aim at the center of the green; the crown deflects anything on the edges away." },
+
+    { num: 15, par: 4, hdcp: 1, champ: 490, member: 420, name: "The Beast", warn: true,
+      desc: "The #1 handicap hole and one of the hardest par fours in all of Wisconsin. Long, tight, and relentlessly punishing. The fairway doglegs, and the approach must carry a ravine on the right while avoiding a false front that rejects anything short. A bogey here is a victory for most.",
+      tip: "Play for bogey and take it gladly. Grip it and rip it off the tee — you need every yard. On approach, the ravine is right and short-right; fly it far enough to clear the ravine and find the green. There is no safe miss here." },
+
+    { num: 16, par: 3, hdcp: 11, champ: 191, member: 171, name: "Precision Required",
+      desc: "A signature Pete Dye par three with a long waste area and sand trap running the full length of the approach. Absolute precision is required. Miss long and right and you're in a run-off area with a nearly impossible up-and-down.",
+      tip: "This is a hold-the-green situation. Take enough club to reach the putting surface — the waste area in front catches anything timid. Short and in the sand is far better than long and right." },
+
+    { num: 17, par: 5, hdcp: 5, champ: 555, member: 490, name: "The Penultimate",
+      desc: "Drive to the right side of the fairway — it's much more open than it looks from the tee. Heavy mounding in the fairway can create awkward lies for the second shot. Pot bunkers front and right of the green must be cleared, and a back-right pin invites approaches that slip off the back.",
+      tip: "Don't let the trees intimidate you off the right side — it's the correct play. Lay up short of the pot bunkers if needed. A back-right pin location is a trap: take an extra club and be prepared to putt from the back fringe rather than short-side yourself." },
+
+    { num: 18, par: 4, hdcp: 7, champ: 440, member: 384, name: "Perched Finish", warn: true,
+      desc: "A fitting finale on a thin, perched green that runs downhill from middle to back. The right side of the fairway is more open but leaves a longer approach. A false front is deceptive — anything just short of the green returns to your feet. Take a half-club more than you think.",
+      tip: "Do not miss this green short — the false front is merciless. The right side of the fairway trades distance for a safer angle; the left is shorter but tighter. Either way, be sure on the approach. Finish strong." },
+  ];
+
+  function render(holes, mountId) {
+    const root = document.getElementById(mountId);
+    const html = holes.map(h => `
+      <div class="hole" data-hole="${h.num}">
+        <div class="hole-row" role="button" tabindex="0" aria-expanded="false" aria-controls="panel-${h.num}">
+          <div class="hole-num">${h.num}</div>
+          <div class="hole-meta">
+            <div class="name">${h.name}</div>
+            <div class="micro">Hole ${h.num} &middot; Par ${h.par}</div>
+          </div>
+          <div class="col-par">
+            <div class="col-label">Par</div>
+            <div class="col-val">${h.par}</div>
+          </div>
+          <div class="col-hdcp">
+            <div class="col-label">Hdcp</div>
+            <div class="col-val">${h.hdcp}</div>
+          </div>
+          <div class="col-champ">
+            <div class="col-label">Champ</div>
+            <div class="col-val">${h.champ}<small>yards</small></div>
+          </div>
+          <div class="col-member">
+            <div class="col-label">Member</div>
+            <div class="col-val">${h.member}<small>yards</small></div>
+          </div>
+          <div class="chev" aria-hidden="true">›</div>
+        </div>
+        <div class="panel" id="panel-${h.num}" role="region" aria-label="Hole ${h.num} strategy">
+          <div class="panel-inner">
+            <p>${h.desc}</p>
+            <p class="tip ${h.warn ? 'warn' : ''}">
+              <span class="tip-label">${h.warn ? 'Warning:' : 'Tip:'}</span>${h.tip}
+            </p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    root.innerHTML = html;
+  }
+
+  render(HOLES.slice(0, 9), 'front-nine');
+  render(HOLES.slice(9), 'back-nine');
+
+  function togglePanel(holeEl) {
+    const panel = holeEl.querySelector('.panel');
+    const row = holeEl.querySelector('.hole-row');
+    const isOpen = holeEl.classList.toggle('open');
+    if (isOpen) {
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+      row.setAttribute('aria-expanded', 'true');
+    } else {
+      panel.style.maxHeight = '0px';
+      row.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  document.querySelectorAll('.hole').forEach(holeEl => {
+    const row = holeEl.querySelector('.hole-row');
+    row.addEventListener('click', () => togglePanel(holeEl));
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePanel(holeEl);
+      }
+    });
+  });
+
+  // Re-measure open panels on resize so animations stay correct
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.hole.open .panel').forEach(p => {
+      p.style.maxHeight = p.scrollHeight + 'px';
+    });
+  });
+</script>
+
+</body>
+</html>

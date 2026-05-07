@@ -31,10 +31,11 @@ export const BADGE_DEFS: BadgeDef[] = [
   { id: 'even_par_9', name: 'Even Par 9', emoji: '⭐', description: 'Shoot even par or better for 9 holes', group: 'scoring_9' },
 
   // Pars in a round
-  { id: 'two_pars',   name: '2 Pars',   emoji: '🟢', description: 'Make 2 pars in a single round', group: 'pars' },
+  { id: 'one_par',    name: '1 Par',    emoji: '🟢', description: 'Make 1 par in a single round',  group: 'pars' },
   { id: 'three_pars', name: '3 Pars',   emoji: '🟢', description: 'Make 3 pars in a single round', group: 'pars' },
-  { id: 'four_pars',  name: '4 Pars',   emoji: '🟢', description: 'Make 4 pars in a single round', group: 'pars' },
   { id: 'five_pars',  name: '5 Pars',   emoji: '🟢', description: 'Make 5 pars in a single round', group: 'pars' },
+  { id: 'seven_pars', name: '7 Pars',   emoji: '🟢', description: 'Make 7 pars in a single round', group: 'pars' },
+  { id: 'nine_pars',  name: '9 Pars',   emoji: '🟢', description: 'Make 9 pars in a single round', group: 'pars' },
 
   // Birdies in a round
   { id: 'one_birdie',    name: 'Birdie',     emoji: '🐦', description: 'Make a birdie in a round',           group: 'birdies' },
@@ -60,9 +61,9 @@ export const BADGE_DEFS: BadgeDef[] = [
   { id: 'no_triples',       name: 'No Triples',   emoji: '💎', description: 'Complete a round with no triple bogeys+', group: 'feats' },
 
   // Greens & Fairways
-  { id: 'gir_1',    name: '1 Green in Reg',  emoji: '⛳', description: 'Hit at least 1 green in regulation in a round',  group: 'greens_fairways' },
-  { id: 'gir_3',    name: '3 Greens in Reg', emoji: '🎯', description: 'Hit at least 3 greens in regulation in a round', group: 'greens_fairways' },
-  { id: 'gir_5',    name: '5 Greens in Reg', emoji: '🌟', description: 'Hit at least 5 greens in regulation in a round', group: 'greens_fairways' },
+  { id: 'gir_30',   name: '30% Greens',      emoji: '⛳', description: 'Hit 30%+ greens in regulation in a round',  group: 'greens_fairways' },
+  { id: 'gir_50',   name: '50% Greens',      emoji: '🎯', description: 'Hit 50%+ greens in regulation in a round',  group: 'greens_fairways' },
+  { id: 'gir_70',   name: '70% Greens',      emoji: '🌟', description: 'Hit 70%+ greens in regulation in a round',  group: 'greens_fairways' },
   { id: 'fir_30',   name: '30% Fairways',    emoji: '🌿', description: 'Hit 30%+ of fairways in a round',                group: 'greens_fairways' },
   { id: 'fir_50',   name: '50% Fairways',    emoji: '🟩', description: 'Hit 50%+ of fairways in a round',                group: 'greens_fairways' },
   { id: 'fir_70',   name: '70% Fairways',    emoji: '🏹', description: 'Hit 70%+ of fairways in a round',                group: 'greens_fairways' },
@@ -107,7 +108,7 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     const maxPutts = r.holes.reduce((m, h) => Math.max(m, h.putts), 0)
     const totalPutts = r.holes.reduce((s, h) => s + h.putts, 0)
     const girCount = r.holes.filter((h) => h.gir).length
-    const firHoles = r.holes.filter((h) => h.par >= 4 && h.fairwayHit !== null)
+    const firHoles = r.holes.filter((h) => h.par >= 4)
     const firHit = firHoles.filter((h) => h.fairwayHit === true).length
     const firPct = firHoles.length > 0 ? firHit / firHoles.length : null
 
@@ -128,10 +129,11 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     }
 
     // Pars
-    if (pars >= 2) award('two_pars',   r.date)
+    if (pars >= 1) award('one_par',    r.date)
     if (pars >= 3) award('three_pars', r.date)
-    if (pars >= 4) award('four_pars',  r.date)
     if (pars >= 5) award('five_pars',  r.date)
+    if (pars >= 7) award('seven_pars', r.date)
+    if (pars >= 9) award('nine_pars',  r.date)
 
     // Birdies
     if (birdies >= 1) award('one_birdie',    r.date)
@@ -145,9 +147,10 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     if (triples === 0) award('no_triples', r.date)
 
     // Greens & Fairways
-    if (girCount >= 1) award('gir_1', r.date)
-    if (girCount >= 3) award('gir_3', r.date)
-    if (girCount >= 5) award('gir_5', r.date)
+    const girPct = r.holes.length > 0 ? girCount / r.holes.length : 0
+    if (girPct >= 0.30) award('gir_30', r.date)
+    if (girPct >= 0.50) award('gir_50', r.date)
+    if (girPct >= 0.70) award('gir_70', r.date)
     if (firPct !== null && firPct >= 0.30) award('fir_30', r.date)
     if (firPct !== null && firPct >= 0.50) award('fir_50', r.date)
     if (firPct !== null && firPct >= 0.70) award('fir_70', r.date)

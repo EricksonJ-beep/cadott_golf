@@ -76,12 +76,12 @@ const PLACEHOLDER_CHALLENGES = [
     description: 'Place 12 putts around the hole like a clock at 4-5 feet. Score is total putts made.',
   },
   {
-    name: 'Around-the-World (4x4 Drill)',
+    name: 'Around-the-World (4 x 3)',
     type: 'range' as const,
     category: 'putting' as const,
     scoringType: 'count' as const,
     unit: 'rounds',
-    description: 'Set 4 balls in a circle at 4 feet. You must make all 4 consecutively to complete one round. Score is the most full times around the world completed before a miss.',
+    description: 'Set 4 balls in a circle at 3 feet. You must make all 4 consecutively to complete one round. Score is the most full times around the world completed before a miss.',
   },
   {
     name: 'One-Ball Survival',

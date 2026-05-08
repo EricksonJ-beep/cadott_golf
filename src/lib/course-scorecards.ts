@@ -12,6 +12,8 @@ export type CourseScorecard = {
   yardageByTee: Record<TeeColor, number[] | null>
   // Optional course-level strategy shown above the hole-by-hole list.
   generalTips?: string
+  // Tee the strategy page should display by default. Falls back to DEFAULT_TEE_COLOR when omitted.
+  defaultTeeColor?: TeeColor
 }
 
 export const DEFAULT_TEE_COLOR: TeeColor = 'white'
@@ -194,6 +196,7 @@ Key takeaways:
       white: [368, 320, 157, 464, 325, 394, 369, 147, 500, 389, 380, 167, 468, 142, 460, 273, 378, 363],
       blue: [376, 330, 167, 496, 360, 427, 409, 174, 519, 430, 389, 197, 488, 155, 504, 280, 388, 370],
     },
+    defaultTeeColor: 'blue',
   },
   {
     id: 'neillsville-country-club-neillsville',
@@ -238,6 +241,7 @@ Key takeaways:
       white: [332, 513, 137, 387, 315, 394, 484, 346, 104, 347, 285, 149, 475, 351, 420, 171, 490, 384],
       red: [269, 435, 95, 309, 242, 282, 421, 294, 86, 277, 224, 98, 401, 310, 324, 134, 397, 342],
     },
+    defaultTeeColor: 'blue',
   },
   {
     id: 'marshfield-country-club-marshfield',

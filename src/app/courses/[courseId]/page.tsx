@@ -2,7 +2,13 @@ import Link from 'next/link'
 import { Playfair_Display, Libre_Baskerville } from 'next/font/google'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { COURSE_SCORECARDS, type CourseScorecard } from '@/lib/course-scorecards'
+import {
+  COURSE_SCORECARDS,
+  DEFAULT_TEE_COLOR,
+  TEE_OPTIONS,
+  type CourseScorecard,
+  type TeeColor,
+} from '@/lib/course-scorecards'
 import {
   getCoachGuide,
   getMyNotesForCourse,
@@ -63,12 +69,22 @@ export default async function CourseGuidePage({ params }: Props) {
     notesByHole.set(n.holeNumber, arr)
   }
 
+  const preferredTee: TeeColor = course.defaultTeeColor ?? DEFAULT_TEE_COLOR
+  const teeYards =
+    course.yardageByTee?.[preferredTee] ??
+    course.yardageByTee?.[DEFAULT_TEE_COLOR] ??
+    null
+  const teeColor: TeeColor = course.yardageByTee?.[preferredTee]
+    ? preferredTee
+    : DEFAULT_TEE_COLOR
+  const teeLabel = TEE_OPTIONS.find((t) => t.value === teeColor)?.label ?? 'White'
+
   const totalPar = sum(course.parByHole)
-  const totalYards = sum(course.yardageByTee?.white)
+  const totalYards = sum(teeYards)
   const frontPar = sum(course.parByHole, 0, 9)
   const backPar = sum(course.parByHole, 9, 18)
-  const frontYds = sum(course.yardageByTee?.white, 0, 9)
-  const backYds = sum(course.yardageByTee?.white, 9, 18)
+  const frontYds = sum(teeYards, 0, 9)
+  const backYds = sum(teeYards, 9, 18)
 
   const isEighteen = course.holes === 18
 
@@ -107,7 +123,7 @@ export default async function CourseGuidePage({ params }: Props) {
           <Stat
             label="Yardage"
             value={totalYards != null ? totalYards.toLocaleString() : '—'}
-            suffix={totalYards != null ? 'White' : undefined}
+            suffix={totalYards != null ? teeLabel : undefined}
           />
           <Stat label="Holes" value={String(course.holes)} />
         </div>
@@ -132,6 +148,7 @@ export default async function CourseGuidePage({ params }: Props) {
           sub={frontPar != null && frontYds != null ? `Par ${frontPar} · ${frontYds.toLocaleString()} yards` : null}
           holes={Array.from({ length: 9 }, (_, i) => i + 1)}
           course={course}
+          teeColor={teeColor}
           guideByHole={guideByHole}
           notesByHole={notesByHole}
           courseId={courseId}
@@ -147,6 +164,7 @@ export default async function CourseGuidePage({ params }: Props) {
             sub={backPar != null && backYds != null ? `Par ${backPar} · ${backYds.toLocaleString()} yards` : null}
             holes={Array.from({ length: 9 }, (_, i) => i + 10)}
             course={course}
+            teeColor={teeColor}
             guideByHole={guideByHole}
             notesByHole={notesByHole}
             courseId={courseId}
@@ -200,6 +218,7 @@ function NineSection({
   sub,
   holes,
   course,
+  teeColor,
   guideByHole,
   notesByHole,
   courseId,
@@ -212,6 +231,7 @@ function NineSection({
   sub: string | null
   holes: number[]
   course: CourseScorecard
+  teeColor: TeeColor
   guideByHole: Map<number, CoachGuide>
   notesByHole: Map<number, PlayerNote[]>
   courseId: string
@@ -236,7 +256,7 @@ function NineSection({
             n={n}
             par={course.parByHole?.[n - 1] ?? null}
             hcp={course.hcpByHole?.[n - 1] ?? null}
-            yards={course.yardageByTee?.white?.[n - 1] ?? null}
+            yards={course.yardageByTee?.[teeColor]?.[n - 1] ?? null}
             guide={guideByHole.get(n)}
             notes={notesByHole.get(n) ?? []}
             courseId={courseId}

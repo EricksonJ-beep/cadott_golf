@@ -57,7 +57,7 @@ const PLACEHOLDER_CHALLENGES = [
     type: 'range' as const,
     category: 'putting' as const,
     scoringType: 'makes_in_a_row' as const,
-    description: 'Hit 5-foot putts and count how many you can make in a row. Score is your longest consecutive streak.',
+    description: 'Equipment: 5 balls and a tee or ball mark to mark out 5 feet. Hit 5-foot putts and count how many you can make in a row. Score is your longest consecutive streak.',
   },
   {
     name: '100-Foot Drill',

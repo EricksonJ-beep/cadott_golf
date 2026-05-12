@@ -4,16 +4,28 @@ import { getPlayerSummary, getPlayerClubs } from '@/app/actions/team'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import PlayerYardagesCard from '@/components/admin/PlayerYardagesCard'
+import { cn } from '@/lib/utils'
 
-type Props = { params: Promise<{ userId: string }> }
+type Props = {
+  params: Promise<{ userId: string }>
+  searchParams: Promise<{ season?: string }>
+}
 
-export default async function PlayerDetailPage({ params }: Props) {
-  const { userId } = await params
+export default async function PlayerDetailPage({ params, searchParams }: Props) {
+  const [{ userId }, { season: seasonParam }] = await Promise.all([params, searchParams])
   const id = Number(userId)
-  const [data, clubs] = await Promise.all([getPlayerSummary(id), getPlayerClubs(id)])
+
+  // 'career' → null (all-time), a numeric string → that season id, missing → undefined (current)
+  const seasonId =
+    seasonParam === 'career' ? null
+    : seasonParam ? Number(seasonParam)
+    : undefined
+
+  const [data, clubs] = await Promise.all([getPlayerSummary(id, seasonId), getPlayerClubs(id)])
   if (!data) notFound()
 
-  const { user, summary, recentRounds } = data
+  const { user, summary, playerRounds, selectedSeason, playerSeasons } = data
+
   const fwyPct =
     summary && summary.fairwayOpps > 0
       ? Math.round((summary.fairwaysHit / summary.fairwayOpps) * 100)
@@ -22,6 +34,9 @@ export default async function PlayerDetailPage({ params }: Props) {
     summary && summary.totalHoles > 0
       ? Math.round((summary.girHit / summary.totalHoles) * 100)
       : null
+
+  const isCareer = seasonId === null
+  const baseUrl = `/admin/team/${userId}`
 
   return (
     <div className="space-y-4">
@@ -36,14 +51,52 @@ export default async function PlayerDetailPage({ params }: Props) {
         </p>
       </div>
 
+      {/* Season selector — only shown when there is season data to navigate */}
+      {playerSeasons.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {playerSeasons.map((s) => {
+            const active = !isCareer && selectedSeason?.id === s.id
+            return (
+              <Link
+                key={s.id}
+                href={`${baseUrl}?season=${s.id}`}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {s.name}
+              </Link>
+            )
+          })}
+          {playerSeasons.length > 1 && (
+            <Link
+              href={`${baseUrl}?season=career`}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+                isCareer
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted',
+              )}
+            >
+              Career
+            </Link>
+          )}
+        </div>
+      )}
+
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Course Stats</CardTitle>
+          <CardTitle className="text-sm">
+            {isCareer ? 'Career Stats' : selectedSeason ? `${selectedSeason.name} Stats` : 'Stats'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {!summary || summary.roundsPlayed === 0 ? (
             <p className="text-sm text-muted-foreground py-2">
-              No rounds logged yet.
+              No rounds logged{isCareer ? ' yet.' : ' this season.'}
             </p>
           ) : (
             <>
@@ -81,19 +134,26 @@ export default async function PlayerDetailPage({ params }: Props) {
 
       <PlayerYardagesCard clubs={clubs} />
 
-      {recentRounds.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Recent Rounds</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">
+            {isCareer ? 'All Rounds' : selectedSeason ? `${selectedSeason.name} Rounds` : 'Rounds'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {playerRounds.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">
+              No rounds logged{isCareer ? ' yet.' : ' this season.'}
+            </p>
+          ) : (
             <ul className="divide-y">
-              {recentRounds.map((r) => (
+              {playerRounds.map((r) => (
                 <li key={r.id} className="py-2 flex items-center justify-between">
                   <Link href={`/rounds/${r.id}`} className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{r.courseName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(r.date).toLocaleDateString()} · {r.holesPlayed} holes
+                      {new Date(r.date).toLocaleDateString()} · {r.holesPlayed}{r.roundSegment ? ` (${r.roundSegment} 9)` : ''} holes
+                      {r.teeColor ? ` · ${r.teeColor}` : ''}
                     </p>
                   </Link>
                   <span className="text-lg font-bold tabular-nums shrink-0">
@@ -102,9 +162,9 @@ export default async function PlayerDetailPage({ params }: Props) {
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

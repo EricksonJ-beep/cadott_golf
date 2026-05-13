@@ -279,6 +279,60 @@ export async function getMyPersonalRoundBests() {
   return { bestFirPct, bestGirPct, lowestPutts18, lowestPutts9 }
 }
 
+export async function getMyCareerStatBadges() {
+  const session = await requireUser()
+  const userId = Number(session.user!.id)
+
+  const [bands] = await db
+    .select({
+      scores70s: sql<number>`count(*) filter (where ${rounds.totalScore} between 70 and 79 and ${rounds.holesPlayed} = 18)::int`,
+      scores80s: sql<number>`count(*) filter (where ${rounds.totalScore} between 80 and 89 and ${rounds.holesPlayed} = 18)::int`,
+      scores90s: sql<number>`count(*) filter (where ${rounds.totalScore} between 90 and 99 and ${rounds.holesPlayed} = 18)::int`,
+    })
+    .from(rounds)
+    .where(eq(rounds.userId, userId))
+
+  const userRounds = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(eq(rounds.userId, userId))
+
+  if (userRounds.length === 0) {
+    return { scores70s: 0, scores80s: 0, scores90s: 0,
+      mostParsInRound: null, mostBirdiesInRound: null,
+      mostEaglesInRound: null, most1PuttsInRound: null }
+  }
+
+  const allHoles = await db
+    .select({ roundId: roundHoles.roundId, par: roundHoles.par, score: roundHoles.score, putts: roundHoles.putts })
+    .from(roundHoles)
+    .where(inArray(roundHoles.roundId, userRounds.map((r) => r.id)))
+
+  const byRound = new Map<number, { par: number; score: number; putts: number }[]>()
+  for (const h of allHoles) {
+    if (!byRound.has(h.roundId)) byRound.set(h.roundId, [])
+    byRound.get(h.roundId)!.push({ par: h.par, score: h.score, putts: h.putts })
+  }
+
+  let mostPars = 0, mostBirdies = 0, mostEagles = 0, most1Putts = 0
+  for (const hs of byRound.values()) {
+    mostPars    = Math.max(mostPars,    hs.filter((h) => h.score === h.par).length)
+    mostBirdies = Math.max(mostBirdies, hs.filter((h) => h.score - h.par === -1).length)
+    mostEagles  = Math.max(mostEagles,  hs.filter((h) => h.score - h.par <= -2).length)
+    most1Putts  = Math.max(most1Putts,  hs.filter((h) => h.putts === 1).length)
+  }
+
+  return {
+    scores70s: bands?.scores70s ?? 0,
+    scores80s: bands?.scores80s ?? 0,
+    scores90s: bands?.scores90s ?? 0,
+    mostParsInRound:    mostPars    > 0 ? mostPars    : null,
+    mostBirdiesInRound: mostBirdies > 0 ? mostBirdies : null,
+    mostEaglesInRound:  mostEagles  > 0 ? mostEagles  : null,
+    most1PuttsInRound:  most1Putts  > 0 ? most1Putts  : null,
+  }
+}
+
 export async function getMyBadges(): Promise<EarnedMap> {
   const session = await requireUser()
   const userId = Number(session.user!.id)

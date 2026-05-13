@@ -125,6 +125,7 @@ export const challenges = pgTable('challenges', {
   description: text('description'),
   maxScore: integer('max_score'),
   isFeatured: boolean('is_featured').notNull().default(false),
+  newUntil: date('new_until'),
   isActive: boolean('is_active').notNull().default(true),
   kind: seasonKindEnum('kind').notNull().default('regular'),
   createdBy: integer('created_by').references(() => users.id),

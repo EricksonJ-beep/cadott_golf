@@ -23,6 +23,13 @@ const CATEGORY_ICONS: Record<string, string> = {
   course_stats: '📊',
 }
 
+function isNew(newUntil: string | null): boolean {
+  if (!newUntil) return false
+  // Compare YYYY-MM-DD strings directly to avoid timezone issues
+  const today = new Date().toISOString().slice(0, 10)
+  return newUntil >= today
+}
+
 export default async function ChallengesTab({ userId }: { userId: number }) {
   const challenges = await getActiveChallenges()
 
@@ -57,7 +64,14 @@ export default async function ChallengesTab({ userId }: { userId: number }) {
         <CardContent className="py-3 px-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-semibold text-sm leading-tight">{c.name}</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-semibold text-sm leading-tight">{c.name}</p>
+                {isNew(c.newUntil) && (
+                  <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200 leading-none">
+                    New
+                  </span>
+                )}
+              </div>
               {c.description && (
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                   {c.description}

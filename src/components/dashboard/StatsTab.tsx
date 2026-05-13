@@ -8,6 +8,7 @@ import {
   getMyStreaks,
   getTeamSeasonStats,
   getMyPersonalRoundBests,
+  getMyCareerStatBadges,
 } from '@/app/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,7 +18,7 @@ import CourseStatsCard from './CourseStatsCard'
 import TeamStatsCard from './TeamStatsCard'
 import TrophyRoom from './TrophyRoom'
 import StreaksCard from './StreaksCard'
-import RoundBestsCard from './RoundBestsCard'
+import CareerStatBadges from './CareerStatBadges'
 
 const CATEGORY_LABEL: Record<string, string> = {
   putting: 'Putting',
@@ -42,7 +43,7 @@ function formatScore(
 }
 
 export default async function StatsTab(_props: { userId: number }) {
-  const [bests, mostLogged, records, season, badges, streaks, team, roundBests] = await Promise.all([
+  const [bests, mostLogged, records, season, badges, streaks, team, roundBests, careerStats] = await Promise.all([
     getMyPersonalBests(),
     getMyMostLoggedChallenge(),
     getMyRoundRecords(),
@@ -51,6 +52,7 @@ export default async function StatsTab(_props: { userId: number }) {
     getMyStreaks(),
     getTeamSeasonStats(),
     getMyPersonalRoundBests(),
+    getMyCareerStatBadges(),
   ])
 
   const hasAnyBadge = Object.values(badges).some((v) => v !== null)
@@ -90,63 +92,41 @@ export default async function StatsTab(_props: { userId: number }) {
         />
       )}
 
-      <RoundBestsCard
+      <CareerStatBadges
+        bestScore18={records.allTimeLowest18}
+        bestPutts18={roundBests.lowestPutts18}
         bestGirPct={roundBests.bestGirPct}
         bestFirPct={roundBests.bestFirPct}
-        lowestPutts18={roundBests.lowestPutts18}
-        lowestPutts9={roundBests.lowestPutts9}
+        totalRounds={records.allTimeRounds}
+        scores70s={careerStats.scores70s}
+        scores80s={careerStats.scores80s}
+        scores90s={careerStats.scores90s}
+        mostPars={careerStats.mostParsInRound}
+        mostBirdies={careerStats.mostBirdiesInRound}
+        mostEagles={careerStats.mostEaglesInRound}
+        most1Putts={careerStats.most1PuttsInRound}
       />
 
       {season && <SeasonAveragesCard summary={season} />}
 
       <StreaksCard streaks={streaks} />
 
-      {records.allTimeRounds > 0 && (
+      {records.historicalSeasons.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">🏆 All-Time Records</CardTitle>
+            <CardTitle className="text-sm">📅 Season History</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-center">
-              {records.allTimeLowest9 != null && (
-                <div>
-                  <div className="text-2xl font-bold tabular-nums">{records.allTimeLowest9}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Best 9-hole</div>
-                </div>
-              )}
-              {records.allTimeLowest18 != null && (
-                <div>
-                  <div className="text-2xl font-bold tabular-nums">{records.allTimeLowest18}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Best 18-hole</div>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center pt-1">
-              <Badge variant="secondary">{records.allTimeRounds} Rounds</Badge>
-              {records.allTimeEagles > 0 && (
-                <Badge variant="secondary">
-                  <span className="text-amber-600 mr-1">●</span>{records.allTimeEagles} Eagle{records.allTimeEagles !== 1 ? 's' : ''}
-                </Badge>
-              )}
-              <Badge variant="secondary">
-                <span className="text-red-600 mr-1">●</span>{records.allTimeBirdies} Birdie{records.allTimeBirdies !== 1 ? 's' : ''}
-              </Badge>
-            </div>
-            {records.historicalSeasons.length > 0 && (
-              <div className="border-t pt-3 space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Season History</p>
-                {records.historicalSeasons.map((s) => (
-                  <div key={s.id} className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">{s.season} · {s.holesPlayed}-hole</span>
-                    <span className="tabular-nums font-medium">
-                      {s.roundsPlayed != null ? `${s.roundsPlayed} rounds` : ''}
-                      {s.lowestScore != null ? ` · Low ${s.lowestScore}` : ''}
-                      {s.averageScore != null ? ` · Avg ${s.averageScore.toFixed(1)}` : ''}
-                    </span>
-                  </div>
-                ))}
+          <CardContent className="space-y-1.5">
+            {records.historicalSeasons.map((s) => (
+              <div key={s.id} className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{s.season} · {s.holesPlayed}-hole</span>
+                <span className="tabular-nums font-medium">
+                  {s.roundsPlayed != null ? `${s.roundsPlayed} rounds` : ''}
+                  {s.lowestScore != null ? ` · Low ${s.lowestScore}` : ''}
+                  {s.averageScore != null ? ` · Avg ${s.averageScore.toFixed(1)}` : ''}
+                </span>
               </div>
-            )}
+            ))}
           </CardContent>
         </Card>
       )}

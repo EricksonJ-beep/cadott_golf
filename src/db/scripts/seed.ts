@@ -68,12 +68,28 @@ const PLACEHOLDER_CHALLENGES = [
     description: 'Set up 4 putts at 5, 10, 15, and 20 feet around a hole at varying angles. Use your full pre-shot routine on every putt. Tally total feet made, then move to a new hole and repeat for 5 holes total (20 putts, 250 possible feet). Goal: 100+ feet made.',
   },
   {
-    name: 'Clock Drill',
+    name: 'Clock Drill (3 Feet)',
     type: 'range' as const,
     category: 'putting' as const,
     scoringType: 'score_out_of' as const,
     maxScore: 12,
-    description: 'Place 12 putts around the hole like a clock at 4-5 feet. Score is total putts made.',
+    description: 'Place 12 balls around the hole at 3 feet like a clock face. Putt all 12 — score is total putts made out of 12.',
+  },
+  {
+    name: 'Clock Drill (4 Feet)',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 12,
+    description: 'Place 12 balls around the hole at 4 feet like a clock face. Putt all 12 — score is total putts made out of 12.',
+  },
+  {
+    name: 'Clock Drill (5 Feet)',
+    type: 'range' as const,
+    category: 'putting' as const,
+    scoringType: 'score_out_of' as const,
+    maxScore: 12,
+    description: 'Place 12 balls around the hole at 5 feet like a clock face. Putt all 12 — score is total putts made out of 12.',
   },
   {
     name: 'Around-the-World (4 x 3)',
@@ -220,7 +236,7 @@ async function main() {
         equipmentList: 'Putter, wedges, full bag, ~30 range balls per player, tees, alignment sticks (optional)',
         blocks: [
           { startMinute: 0,  durationMinutes: 5,  blockName: 'Warm-Up Rolls',                       drillDescription: 'No pressure, just feel. Roll 5–6 putts from 15–20 feet to each quadrant of the hole. Focus on pace — get the speed of the green before anything else.' },
-          { startMinute: 5,  durationMinutes: 10, blockName: '5-Foot Putt Challenge',               drillDescription: 'Place a ball at 5 feet on four sides of the hole (N, S, E, W). Must make all 4 in a row to advance. If you miss, start over. Goal: complete the loop twice. Builds consistency under repetition pressure.' },
+          { startMinute: 5,  durationMinutes: 10, blockName: '5-Foot Putt Challenge',               drillDescription: 'Equipment: 5 balls and a tee or ball mark to mark out 5 feet. Hit 5-foot putts and count how many you can make in a row. Score is your longest consecutive streak.' },
           { startMinute: 15, durationMinutes: 8,  blockName: 'Clock Drill',                         drillDescription: 'Place 12 balls around the hole at 3 feet like a clock face. Putt all 12 consecutively — miss one and restart from that position. Goal: complete the full clock without missing. Builds short-putt confidence from all angles.' },
           { startMinute: 23, durationMinutes: 7,  blockName: 'Lag Putting — Speed Control',         drillDescription: 'From 30, 40, and 50 feet, hit 2 putts from each distance. Goal: finish within a 3-foot circle (use a tee as a marker). Focus on getting the pace right — if you\'re consistently short or long, make one adjustment and stick with it.' },
           { startMinute: 30, durationMinutes: 7,  blockName: 'Guided Warm-Up — One Club, One Spot', drillDescription: 'Use a pitching wedge or 9-iron. Chip 10 balls from the same spot to the same target. Focus on a quiet lower body, hands leading the club, and watching where the ball lands — not where it ends up. Reset between each chip.' },
@@ -407,6 +423,55 @@ H15  Par 3   142y   tee only
 H16  Par 4   393y   tee + approach
 H17  Par 5   459y   tee + approach (reachable)
 H18  Par 4   400y   tee + approach
+
+Back 9 par: 36.
+
+Goal: 50% fairways, 50% greens — anything above is gravy.` },
+      ],
+    },
+    {
+      title: 'Big Fish on the Range — 18 Holes',
+      focusArea: 'Course Simulation',
+      theme: 'Play all 18 at Big Fish from the practice tee',
+      totalDurationMinutes: 60,
+      equipmentList: 'Full bag, range balls',
+      blocks: [
+        { startMinute: 0, durationMinutes: 15, blockName: 'Warm-Up', drillDescription: `Loosen up with half-swings on a wedge, then build through 9-iron, 7-iron, and a hybrid. Hit 3-5 drivers to find your tee-shot shape. Don't skip this — you're about to "play" 18 holes at Big Fish.` },
+        { startMinute: 15, durationMinutes: 5, blockName: 'How to Play', drillDescription: `You're going to play Big Fish (blue tees) hole-by-hole on the range. For each hole:
+
+• Hit your normal tee shot. Pick a fairway target on the range (two flags, or a defined width). Would your tee shot have hit the fairway? That's FIR. Par 3s don't count for FIR.
+
+• Estimate your remaining yardage (hole yardage minus your tee carry). Play your approach with the right club. Pick a green target. Would your approach have hit the green? That's GIR.
+
+• Par 5s: tee shot, then either a layup + wedge approach or a long approach if you can reach. Whatever your real play would be.
+
+• Par 3s: the tee shot IS the approach — only GIR is in play.
+
+You're not logging anything — just think about FIR and GIR after each shot. The point is to play with intent, not just hit balls.` },
+        { startMinute: 20, durationMinutes: 20, blockName: 'Front 9 — Tee + Approach', drillDescription: `Play each hole in order. Take your time, hit your real club, commit to your target.
+
+H1   Par 4   378y   tee + approach
+H2   Par 5   525y   tee + layup + approach
+H3   Par 3   149y   tee only (= approach)
+H4   Par 4   437y   tee + approach
+H5   Par 4   337y   tee + approach
+H6   Par 4   410y   tee + approach
+H7   Par 5   514y   tee + layup + approach (or carry water for green in 2)
+H8   Par 4   385y   tee + approach
+H9   Par 3   123y   tee only (= approach)
+
+Front 9 par: 36.` },
+        { startMinute: 40, durationMinutes: 20, blockName: 'Back 9 — Tee + Approach', drillDescription: `Same routine. Same focus. Don't rush.
+
+H10  Par 4   362y   tee + approach
+H11  Par 4   345y   tee + approach
+H12  Par 3   174y   tee only (= approach)
+H13  Par 5   487y   tee + layup + approach
+H14  Par 4   398y   tee + approach
+H15  Par 4   464y   tee + approach (Hcp 1 — bogey is a good score)
+H16  Par 3   179y   tee only (= approach)
+H17  Par 5   524y   tee + layup + approach
+H18  Par 4   417y   tee + approach
 
 Back 9 par: 36.
 

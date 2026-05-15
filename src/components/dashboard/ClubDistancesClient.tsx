@@ -36,6 +36,19 @@ const SWING_LABELS: Record<string, string> = {
   quarter: '¼',
 }
 
+const SECTION_THEME = {
+  wedges: {
+    card: 'border-orange-200/90 hover:border-orange-300 shadow-[0_1px_0_rgba(0,0,0,0.03)]',
+    stripe: 'from-orange-300 to-amber-200',
+    title: 'text-orange-800',
+  },
+  clubs: {
+    card: 'border-sky-200/90 hover:border-sky-300 shadow-[0_1px_0_rgba(0,0,0,0.03)]',
+    stripe: 'from-sky-300 to-cyan-200',
+    title: 'text-sky-800',
+  },
+} as const
+
 function latestDistance(distances: Distance[], swingType: string) {
   return distances.find((d) => d.swingType === swingType) ?? null
 }
@@ -88,9 +101,12 @@ function WedgeGrid({
   if (wedges.length === 0) return null
 
   return (
-    <Card>
+    <Card
+      className={`relative overflow-hidden bg-white transition-colors ${SECTION_THEME.wedges.card}`}
+    >
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${SECTION_THEME.wedges.stripe}`} />
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Wedges</CardTitle>
+        <CardTitle className={`text-base ${SECTION_THEME.wedges.title}`}>Wedges</CardTitle>
       </CardHeader>
       <CardContent className="px-2">
         <div className="grid grid-cols-[1fr_repeat(4,minmax(48px,1fr))] gap-x-1 gap-y-1">
@@ -398,9 +414,12 @@ export default function ClubDistancesClient({ clubs }: { clubs: Club[] }) {
         onEdit={(club, swingType) => setEditing({ club, swingType })}
       />
 
-      <Card>
+      <Card
+        className={`relative overflow-hidden bg-white transition-colors ${SECTION_THEME.clubs.card}`}
+      >
+        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${SECTION_THEME.clubs.stripe}`} />
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Club Distances</CardTitle>
+          <CardTitle className={`text-base ${SECTION_THEME.clubs.title}`}>Club Distances</CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-zinc-100 px-4">
           {visibleNonWedges.length === 0 && (

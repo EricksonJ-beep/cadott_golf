@@ -23,6 +23,49 @@ const CATEGORY_ICONS: Record<string, string> = {
   course_stats: '📊',
 }
 
+const CATEGORY_STYLES: Record<string, { stripe: string; border: string; header: string }> = {
+  putting: {
+    stripe: 'from-emerald-300 to-emerald-200',
+    border: 'border-emerald-200/90 hover:border-emerald-300',
+    header: 'text-emerald-700',
+  },
+  chipping: {
+    stripe: 'from-orange-300 to-amber-200',
+    border: 'border-orange-200/90 hover:border-orange-300',
+    header: 'text-orange-700',
+  },
+  bunker: {
+    stripe: 'from-yellow-300 to-amber-200',
+    border: 'border-yellow-200/90 hover:border-yellow-300',
+    header: 'text-yellow-700',
+  },
+  driving: {
+    stripe: 'from-sky-300 to-cyan-200',
+    border: 'border-sky-200/90 hover:border-sky-300',
+    header: 'text-sky-700',
+  },
+  approach: {
+    stripe: 'from-indigo-300 to-blue-200',
+    border: 'border-indigo-200/90 hover:border-indigo-300',
+    header: 'text-indigo-700',
+  },
+  wedges: {
+    stripe: 'from-lime-300 to-lime-200',
+    border: 'border-lime-200/90 hover:border-lime-300',
+    header: 'text-lime-700',
+  },
+  course_stats: {
+    stripe: 'from-violet-300 to-fuchsia-200',
+    border: 'border-violet-200/90 hover:border-violet-300',
+    header: 'text-violet-700',
+  },
+}
+
+const TYPE_BADGE_STYLES: Record<'range' | 'course', string> = {
+  range: 'bg-sky-100 text-sky-800 border border-sky-200',
+  course: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+}
+
 function isNew(newUntil: string | null): boolean {
   if (!newUntil) return false
   // Compare YYYY-MM-DD strings directly to avoid timezone issues
@@ -58,9 +101,19 @@ export default async function ChallengesTab({ userId }: { userId: number }) {
     (k) => grouped[k] && k !== 'putting' && k !== 'chipping',
   )
 
-  const renderChallengeCard = (c: (typeof challenges)[number]) => (
+  const renderChallengeCard = (c: (typeof challenges)[number]) => {
+    const categoryStyle = CATEGORY_STYLES[c.category] ?? {
+      stripe: 'from-zinc-300 to-zinc-200',
+      border: 'border-zinc-200 hover:border-zinc-300',
+      header: 'text-zinc-700',
+    }
+
+    return (
     <Link key={c.id} href={`/challenges/${c.id}`}>
-      <Card className="active:bg-zinc-50 transition-colors cursor-pointer hover:border-[#FFD700]">
+      <Card
+        className={`relative overflow-hidden bg-white border shadow-[0_1px_0_rgba(0,0,0,0.03)] active:bg-zinc-50 transition-all duration-200 cursor-pointer hover:shadow-sm ${categoryStyle.border}`}
+      >
+        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${categoryStyle.stripe}`} />
         <CardContent className="py-3 px-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -84,7 +137,7 @@ export default async function ChallengesTab({ userId }: { userId: number }) {
                   Featured
                 </Badge>
               )}
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className={`text-[10px] ${TYPE_BADGE_STYLES[c.type]}`}>
                 {c.type === 'range' ? 'Range' : 'Course'}
               </Badge>
             </div>
@@ -92,7 +145,19 @@ export default async function ChallengesTab({ userId }: { userId: number }) {
         </CardContent>
       </Card>
     </Link>
-  )
+    )
+  }
+
+  const renderSectionLabel = (cat: string, label: string) => {
+    const headerClass = CATEGORY_STYLES[cat]?.header ?? 'text-muted-foreground'
+
+    return (
+      <h3 className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${headerClass}`}>
+        <span>{CATEGORY_ICONS[cat]}</span>
+        {label}
+      </h3>
+    )
+  }
 
   return (
     <div className="space-y-5">
@@ -115,30 +180,21 @@ export default async function ChallengesTab({ userId }: { userId: number }) {
 
       {putting.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <span>{CATEGORY_ICONS.putting}</span>
-            Putting Challenges
-          </h3>
+          {renderSectionLabel('putting', 'Putting Challenges')}
           <div className="space-y-2">{putting.map((c) => renderChallengeCard(c))}</div>
         </div>
       )}
 
       {chipping.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <span>{CATEGORY_ICONS.chipping}</span>
-            Chipping Challenges
-          </h3>
+          {renderSectionLabel('chipping', 'Chipping Challenges')}
           <div className="space-y-2">{chipping.map((c) => renderChallengeCard(c))}</div>
         </div>
       )}
 
       {orderedCategories.map((cat) => (
         <div key={cat} className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <span>{CATEGORY_ICONS[cat]}</span>
-            {CATEGORY_LABELS[cat]}
-          </h3>
+          {renderSectionLabel(cat, CATEGORY_LABELS[cat])}
           <div className="space-y-2">{grouped[cat].map((c) => renderChallengeCard(c))}</div>
         </div>
       ))}

@@ -375,6 +375,7 @@ Key takeaways:
     city: "Black River Falls, WI",
     holes: 18,
     sourceUrl: "https://www.golfskyline.com",
+    defaultTeeColor: "blue",
     parByHole: [4, 3, 5, 4, 5, 4, 4, 3, 4, 5, 4, 4, 4, 4, 3, 5, 3, 4],
     hcpByHole: [8, 17, 7, 11, 5, 10, 16, 3, 1, 13, 4, 15, 12, 6, 18, 9, 14, 2],
     yardageByTee: {

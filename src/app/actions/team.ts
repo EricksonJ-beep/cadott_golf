@@ -1,20 +1,29 @@
-'use server'
+"use server";
 
-import { db } from '@/db'
-import { rounds, roundHoles, users, seasons, challengeResults, playerClubs } from '@/db/schema'
-import { and, desc, eq, sql, inArray } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { getCurrentSeason } from '@/lib/seasons'
+import { db } from "@/db";
+import {
+  rounds,
+  roundHoles,
+  users,
+  seasons,
+  challengeResults,
+  playerClubs,
+  clubDistances,
+} from "@/db/schema";
+import { and, desc, eq, sql, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getCurrentSeason } from "@/lib/seasons";
+import { revalidatePath } from "next/cache";
 
 async function requireCoach() {
-  const session = await auth()
-  if (!session?.user || session.user.role !== 'coach') redirect('/dashboard')
-  return session
+  const session = await auth();
+  if (!session?.user || session.user.role !== "coach") redirect("/dashboard");
+  return session;
 }
 
 export async function getTeamOverview() {
-  await requireCoach()
+  await requireCoach();
 
   const players = await db
     .select({
@@ -25,20 +34,20 @@ export async function getTeamOverview() {
     })
     .from(users)
     .where(eq(users.isActive, true))
-    .orderBy(users.name)
+    .orderBy(users.name);
 
   // Aggregate per-player round stats
   const stats = await db
     .select({
       userId: rounds.userId,
-      roundsPlayed: sql<number>`count(distinct ${rounds.id})::int`.as('rounds'),
+      roundsPlayed: sql<number>`count(distinct ${rounds.id})::int`.as("rounds"),
       avgScore: sql<number | null>`avg(${roundHoles.score})::float`,
       birdies: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} = -1)::int`,
       eagles: sql<number>`count(*) filter (where ${roundHoles.score} - ${roundHoles.par} <= -2)::int`,
     })
     .from(rounds)
     .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))
-    .groupBy(rounds.userId)
+    .groupBy(rounds.userId);
 
   const challengeCounts = await db
     .select({
@@ -46,10 +55,12 @@ export async function getTeamOverview() {
       challengeLogs: sql<number>`count(${challengeResults.id})::int`,
     })
     .from(challengeResults)
-    .groupBy(challengeResults.userId)
+    .groupBy(challengeResults.userId);
 
-  const statsMap = new Map(stats.map((s) => [s.userId, s]))
-  const challengeMap = new Map(challengeCounts.map((c) => [c.userId, c.challengeLogs]))
+  const statsMap = new Map(stats.map((s) => [s.userId, s]));
+  const challengeMap = new Map(
+    challengeCounts.map((c) => [c.userId, c.challengeLogs]),
+  );
 
   return players.map((p) => ({
     ...p,
@@ -58,37 +69,49 @@ export async function getTeamOverview() {
     birdies: statsMap.get(p.id)?.birdies ?? 0,
     eagles: statsMap.get(p.id)?.eagles ?? 0,
     challengeLogs: challengeMap.get(p.id) ?? 0,
-  }))
+  }));
 }
 
 // seasonId = undefined → current season, null → career (all-time), number → specific season
-export async function getPlayerSummary(userId: number, seasonId?: number | null) {
-  await requireCoach()
+export async function getPlayerSummary(
+  userId: number,
+  seasonId?: number | null,
+) {
+  await requireCoach();
 
   const [user] = await db
-    .select({ id: users.id, name: users.name, grade: users.grade, username: users.username })
+    .select({
+      id: users.id,
+      name: users.name,
+      grade: users.grade,
+      username: users.username,
+    })
     .from(users)
     .where(eq(users.id, userId))
-    .limit(1)
-  if (!user) return null
+    .limit(1);
+  if (!user) return null;
 
   // Resolve which season to display
-  let selectedSeason: typeof seasons.$inferSelect | null = null
+  let selectedSeason: typeof seasons.$inferSelect | null = null;
   if (seasonId === undefined) {
-    selectedSeason = await getCurrentSeason()
+    selectedSeason = await getCurrentSeason();
   } else if (seasonId !== null) {
-    const [s] = await db.select().from(seasons).where(eq(seasons.id, seasonId)).limit(1)
-    selectedSeason = s ?? null
+    const [s] = await db
+      .select()
+      .from(seasons)
+      .where(eq(seasons.id, seasonId))
+      .limit(1);
+    selectedSeason = s ?? null;
   }
 
   // All seasons this player has rounds in, newest first (for the selector)
   const playerSeasonIds = await db
     .selectDistinct({ seasonId: rounds.seasonId })
     .from(rounds)
-    .where(eq(rounds.userId, userId))
+    .where(eq(rounds.userId, userId));
   const nonNullSeasonIds = playerSeasonIds
     .map((r) => r.seasonId)
-    .filter((id): id is number => id !== null)
+    .filter((id): id is number => id !== null);
   const playerSeasons =
     nonNullSeasonIds.length > 0
       ? await db
@@ -96,12 +119,12 @@ export async function getPlayerSummary(userId: number, seasonId?: number | null)
           .from(seasons)
           .where(inArray(seasons.id, nonNullSeasonIds))
           .orderBy(desc(seasons.startDate))
-      : []
+      : [];
 
   // Where clause: filter by userId, and by season when not viewing career
   const roundsWhere = selectedSeason
     ? and(eq(rounds.userId, userId), eq(rounds.seasonId, selectedSeason.id))
-    : eq(rounds.userId, userId)
+    : eq(rounds.userId, userId);
 
   const [[roundSummary], playerRounds] = await Promise.all([
     db
@@ -116,9 +139,15 @@ export async function getPlayerSummary(userId: number, seasonId?: number | null)
         fairwayOpps: sql<number>`count(*) filter (where ${roundHoles.par} > 3)::int`,
         girHit: sql<number>`count(*) filter (where ${roundHoles.gir} = true)::int`,
         totalHoles: sql<number>`count(${roundHoles.id})::int`,
-        avgOnPar3: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 3)::float`,
-        avgOnPar4: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 4)::float`,
-        avgOnPar5: sql<number | null>`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 5)::float`,
+        avgOnPar3: sql<
+          number | null
+        >`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 3)::float`,
+        avgOnPar4: sql<
+          number | null
+        >`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 4)::float`,
+        avgOnPar5: sql<
+          number | null
+        >`avg(${roundHoles.score}) filter (where ${roundHoles.par} = 5)::float`,
       })
       .from(rounds)
       .leftJoin(roundHoles, eq(roundHoles.roundId, rounds.id))
@@ -136,13 +165,19 @@ export async function getPlayerSummary(userId: number, seasonId?: number | null)
       .from(rounds)
       .where(roundsWhere)
       .orderBy(desc(rounds.date), desc(rounds.id)),
-  ])
+  ]);
 
-  return { user, summary: roundSummary, playerRounds, selectedSeason, playerSeasons }
+  return {
+    user,
+    summary: roundSummary,
+    playerRounds,
+    selectedSeason,
+    playerSeasons,
+  };
 }
 
 export async function getPlayerClubs(userId: number) {
-  await requireCoach()
+  await requireCoach();
 
   return db.query.playerClubs.findMany({
     where: eq(playerClubs.userId, userId),
@@ -153,5 +188,53 @@ export async function getPlayerClubs(userId: number) {
       },
     },
     orderBy: (c, { asc }) => [asc(c.orderIndex)],
-  })
+  });
+}
+
+type SwingType = "full" | "three_quarter" | "half" | "quarter";
+
+export async function savePlayerClubEditsByCoach(input: {
+  userId: number;
+  playerClubId: number;
+  customName?: string | null;
+  distances: Array<{
+    swingType: SwingType;
+    carryYards: number | null;
+    totalYards: number | null;
+  }>;
+}) {
+  await requireCoach();
+
+  const [club] = await db
+    .select({ id: playerClubs.id, userId: playerClubs.userId })
+    .from(playerClubs)
+    .where(eq(playerClubs.id, input.playerClubId))
+    .limit(1);
+
+  if (!club || club.userId !== input.userId) {
+    throw new Error("Invalid player club selection.");
+  }
+
+  if (input.customName !== undefined) {
+    await db
+      .update(playerClubs)
+      .set({ customName: input.customName?.trim() || null })
+      .where(eq(playerClubs.id, input.playerClubId));
+  }
+
+  if (input.distances.length > 0) {
+    await db.insert(clubDistances).values(
+      input.distances.map((d) => ({
+        userId: input.userId,
+        playerClubId: input.playerClubId,
+        swingType: d.swingType,
+        carryYards: d.carryYards,
+        totalYards: d.totalYards,
+      })),
+    );
+  }
+
+  revalidatePath(`/admin/team/${input.userId}`);
+  revalidatePath("/admin/team");
+  revalidatePath("/dashboard");
 }

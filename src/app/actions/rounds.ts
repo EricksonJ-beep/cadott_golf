@@ -86,7 +86,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
   }
   if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
   for (const h of holes) {
-    if (!h.par || h.par < 3 || h.par > 6) return `Hole ${h.holeNumber}: par must be 3–6.`
+    if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
     if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
     if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
   }
@@ -172,19 +172,21 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
 
   const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
 
-  await db.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
-  await db.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
-  await db.insert(roundHoles).values(
-    holes.map((h) => ({
-      roundId,
-      holeNumber: h.holeNumber,
-      par: h.par,
-      score: h.score,
-      fairwayHit: h.fairwayHit,
-      gir: h.gir,
-      putts: h.putts,
-    })),
-  )
+  await db.transaction(async (tx) => {
+    await tx.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
+    await tx.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
+    await tx.insert(roundHoles).values(
+      holes.map((h) => ({
+        roundId,
+        holeNumber: h.holeNumber,
+        par: h.par,
+        score: h.score,
+        fairwayHit: h.fairwayHit,
+        gir: h.gir,
+        putts: h.putts,
+      })),
+    )
+  })
 
   revalidatePath('/dashboard')
   revalidatePath(`/rounds/${roundId}`)

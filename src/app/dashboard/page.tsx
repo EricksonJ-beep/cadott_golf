@@ -11,14 +11,14 @@ import RulesTab from '@/components/dashboard/RulesTab'
 import HomeTab from '@/components/dashboard/HomeTab'
 
 type Props = {
-  searchParams: Promise<{ tab?: string; view?: string }>
+  searchParams: Promise<{ tab?: string; view?: string; season?: string }>
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
   const session = await auth()
   if (!session?.user) redirect('/')
 
-  const { tab, view } = await searchParams
+  const { tab, view, season } = await searchParams
   const userId = Number(session.user.id)
 
   if (!tab) return <HomeTab />
@@ -28,7 +28,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       {tab === 'info'        && <MyInfoTab userId={userId} />}
       {tab === 'practice'    && <PracticeTab />}
       {tab === 'challenges'  && <ChallengesTab userId={userId} />}
-      {tab === 'leaderboard' && <LeaderboardTab userId={userId} view={view} />}
+      {tab === 'leaderboard' && <LeaderboardTab userId={userId} view={view} season={season} />}
       {tab === 'stats'       && <StatsTab userId={userId} />}
       {tab === 'rounds'      && <RoundsTab />}
       {tab === 'courses'     && <CourseGuideTab />}

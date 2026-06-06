@@ -213,8 +213,18 @@ async function getLowestScores(holesPlayed: 9 | 18, seasonId: number | null): Pr
   }))
 }
 
-export async function getLeaderboardSnapshot(view: LeaderboardView): Promise<LeaderboardSnapshot> {
-  const seasonId = view === 'season' ? await getActiveSeasonId() : null
+export async function getLeaderboardSnapshot(view: LeaderboardView, specificSeasonId?: number): Promise<LeaderboardSnapshot> {
+  let seasonId: number | null = null
+
+  if (specificSeasonId) {
+    // Viewing a specific archived season
+    seasonId = specificSeasonId
+  } else if (view === 'season') {
+    // Viewing current active season
+    seasonId = await getActiveSeasonId()
+  }
+  // If view === 'alltime', seasonId stays null
+
   const [board, challenges, lowest9Hole, lowest18Hole, season] = await Promise.all([
     buildBoard(seasonId),
     getChallengeLeaderboards(seasonId),
@@ -230,4 +240,17 @@ export async function getLeaderboardSnapshot(view: LeaderboardView): Promise<Lea
     lowest9Hole,
     lowest18Hole,
   }
+}
+
+// Get all available seasons for archive selector
+export async function getAvailableSeasons() {
+  return db
+    .select({
+      id: seasons.id,
+      name: seasons.name,
+      startDate: seasons.startDate,
+      endDate: seasons.endDate,
+    })
+    .from(seasons)
+    .orderBy(desc(seasons.startDate))
 }

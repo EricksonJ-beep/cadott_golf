@@ -1,11 +1,13 @@
 import Link from 'next/link'
-import { getLeaderboardSnapshot } from '@/app/actions/birdie-board'
+import { getLeaderboardSnapshot, getAvailableSeasons } from '@/app/actions/birdie-board'
+import { getSeasonRecords } from '@/app/actions/records'
 import BoardCard from '@/components/birdie-board/BoardCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 type Props = {
   userId: number
   view?: string
+  season?: string
 }
 
 type RoundScoreRow = {
@@ -172,14 +174,25 @@ function ChallengeLeaderboardsTable({
   )
 }
 
-export default async function LeaderboardTab({ userId, view }: Props) {
+export default async function LeaderboardTab({ userId, view, season }: Props) {
   const isAllTime = view === 'alltime'
+  const specificSeasonId = season ? Number(season) : undefined
 
-  const { board, seasonName, challenges, lowest9Hole, lowest18Hole } = await getLeaderboardSnapshot(
-    isAllTime ? 'alltime' : 'season'
-  )
+  const [availableSeasons, leaderboard] = await Promise.all([
+    getAvailableSeasons(),
+    getLeaderboardSnapshot(isAllTime ? 'alltime' : 'season', specificSeasonId),
+  ])
 
-  const heading = isAllTime ? 'All-Time Leaderboard' : `${seasonName ?? 'Season'} Leaderboard`
+  const { board, seasonName, challenges, lowest9Hole, lowest18Hole } = leaderboard
+
+  // Get records for the selected season (if viewing a specific season)
+  const records = specificSeasonId ? await getSeasonRecords(specificSeasonId) : null
+
+  const heading = isAllTime
+    ? 'All-Time Leaderboard'
+    : specificSeasonId
+    ? seasonName
+    : `${seasonName ?? 'Season'} Leaderboard`
 
   return (
     <div className="space-y-4">
@@ -187,27 +200,50 @@ export default async function LeaderboardTab({ userId, view }: Props) {
         <h2 className="text-xl font-bold">{heading}</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Link
-          href="/dashboard?tab=leaderboard"
-          className={`text-center py-2.5 rounded-md text-sm font-semibold transition-colors ${
-            !isAllTime
-              ? 'bg-black text-[#FFD700]'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-          }`}
-        >
-          Season
-        </Link>
-        <Link
-          href="/dashboard?tab=leaderboard&view=alltime"
-          className={`text-center py-2.5 rounded-md text-sm font-semibold transition-colors ${
-            isAllTime
-              ? 'bg-black text-[#FFD700]'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-          }`}
-        >
-          All-Time
-        </Link>
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/dashboard?tab=leaderboard"
+            className={`text-center py-2.5 rounded-md text-sm font-semibold transition-colors ${
+              !isAllTime && !specificSeasonId
+                ? 'bg-black text-[#FFD700]'
+                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            }`}
+          >
+            Current Season
+          </Link>
+          <Link
+            href="/dashboard?tab=leaderboard&view=alltime"
+            className={`text-center py-2.5 rounded-md text-sm font-semibold transition-colors ${
+              isAllTime
+                ? 'bg-black text-[#FFD700]'
+                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            }`}
+          >
+            All-Time
+          </Link>
+        </div>
+
+        {!isAllTime && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Archive Seasons</p>
+            <div className="grid grid-cols-2 gap-2">
+              {availableSeasons.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/dashboard?tab=leaderboard&season=${s.id}`}
+                  className={`p-2 rounded-md text-xs font-medium transition-colors text-center ${
+                    specificSeasonId === s.id
+                      ? 'bg-[#FFD700] text-black'
+                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                  }`}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <BoardCard
@@ -253,6 +289,58 @@ export default async function LeaderboardTab({ userId, view }: Props) {
         boards={challenges}
         currentUserId={userId}
       />
+
+      {records && (
+        <>
+          <div className="pt-4 border-t">
+            <h3 className="text-lg font-bold mb-4">Season Records</h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <RecordCard title="Most Birdies" icon="🐦" rows={records.mostBirdiesSeason} />
+            <RecordCard title="Most Pars" icon="🎯" rows={records.mostParsSeason} />
+            <RecordCard title="Most Eagles" icon="🦅" rows={records.mostEaglesSeason} span2 />
+            <RecordCard title="Lowest Round" icon="⛳" rows={records.lowestRoundSeason} span2 />
+          </div>
+        </>
+      )}
     </div>
   )
 }
+
+function RecordCard({
+  title,
+  icon,
+  rows,
+  span2,
+}: {
+  title: string
+  icon: string
+  rows: any[]
+  span2?: boolean
+}) {
+  return (
+    <Card className={span2 ? 'col-span-2' : ''}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <span>{icon}</span> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No data yet</p>
+        ) : (
+          <div className="space-y-1">
+            {rows.map((row, idx) => (
+              <div key={idx} className="flex justify-between items-center text-xs">
+                <span className="font-medium">{idx + 1}. {row.name}</span>
+                <span className="text-muted-foreground">{row.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+

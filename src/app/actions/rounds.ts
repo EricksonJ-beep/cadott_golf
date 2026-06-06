@@ -49,7 +49,7 @@ export async function getRound(id: number) {
     .where(eq(roundHoles.roundId, id))
     .orderBy(asc(roundHoles.holeNumber))
 
-  return { ...round, holes }
+  return { ...round, holes, hasDetailedScores: holes.length > 0 }
 }
 
 type HoleInput = {
@@ -73,6 +73,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
   const isCvgaTournament = (formData.get('isCvgaTournament') as string) === 'true'
+  const entryMode = (formData.get('entryMode') as string) || 'hole-by-hole'
   const holesJson = formData.get('holes') as string
 
   if (!courseName) return 'Course name is required.'
@@ -80,19 +81,28 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
   if (holesPlayed !== 9 && holesPlayed !== 18) return 'Holes must be 9 or 18.'
 
   let holes: HoleInput[] = []
-  try {
-    holes = JSON.parse(holesJson || '[]')
-  } catch {
-    return 'Invalid hole data.'
-  }
-  if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
-  for (const h of holes) {
-    if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
-    if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
-    if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
-  }
+  let totalScore: number
 
-  const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
+  if (entryMode === 'score-only') {
+    const scoreOnlyInput = formData.get('scoreOnly') as string
+    if (!scoreOnlyInput || isNaN(Number(scoreOnlyInput))) return 'Score is required.'
+    totalScore = Number(scoreOnlyInput)
+    if (totalScore < 1 || totalScore > 200) return 'Enter a valid score.'
+    // For score-only, we don't save individual hole data
+  } else {
+    try {
+      holes = JSON.parse(holesJson || '[]')
+    } catch {
+      return 'Invalid hole data.'
+    }
+    if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
+    for (const h of holes) {
+      if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
+      if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
+      if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
+    }
+    totalScore = holes.reduce((sum, h) => sum + h.score, 0)
+  }
 
   const seasonId = await getSeasonIdForDate(date)
 
@@ -154,6 +164,7 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
   const isCvgaTournament = (formData.get('isCvgaTournament') as string) === 'true'
+  const entryMode = (formData.get('entryMode') as string) || 'hole-by-hole'
   const holesJson = formData.get('holes') as string
 
   if (!courseName) return 'Course name is required.'
@@ -161,19 +172,27 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   if (holesPlayed !== 9 && holesPlayed !== 18) return 'Holes must be 9 or 18.'
 
   let holes: HoleInput[] = []
-  try {
-    holes = JSON.parse(holesJson || '[]')
-  } catch {
-    return 'Invalid hole data.'
-  }
-  if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
-  for (const h of holes) {
-    if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
-    if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
-    if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
-  }
+  let totalScore: number
 
-  const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
+  if (entryMode === 'score-only') {
+    const scoreOnlyInput = formData.get('scoreOnly') as string
+    if (!scoreOnlyInput || isNaN(Number(scoreOnlyInput))) return 'Score is required.'
+    totalScore = Number(scoreOnlyInput)
+    if (totalScore < 1 || totalScore > 200) return 'Enter a valid score.'
+  } else {
+    try {
+      holes = JSON.parse(holesJson || '[]')
+    } catch {
+      return 'Invalid hole data.'
+    }
+    if (holes.length !== holesPlayed) return `Expected ${holesPlayed} holes.`
+    for (const h of holes) {
+      if (!h.par || h.par < 3 || h.par > 5) return `Hole ${h.holeNumber}: par must be 3–5.`
+      if (!h.score || h.score < 1 || h.score > 15) return `Hole ${h.holeNumber}: enter a valid score.`
+      if (h.putts < 0 || h.putts > 10) return `Hole ${h.holeNumber}: enter valid putts.`
+    }
+    totalScore = holes.reduce((sum, h) => sum + h.score, 0)
+  }
 
   await db.transaction(async (tx) => {
     await tx.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes, isCvgaTournament }).where(eq(rounds.id, roundId))

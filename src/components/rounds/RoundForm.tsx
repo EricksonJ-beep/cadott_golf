@@ -31,7 +31,10 @@ type InitialData = {
   holes: Hole[]
   weatherNotes: string | null
   freeTextNotes: string | null
+  hasDetailedScores: boolean
 }
+
+type EntryMode = 'score-only' | 'hole-by-hole'
 
 type RoundSegment = 'front9' | 'back9' | 'full18'
 
@@ -94,11 +97,14 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
   const boundAction = isEdit ? updateRound.bind(null, initialData!.roundId) : saveRound
   const [error, action, pending] = useActionState(boundAction, null)
   const initialSegment = getInitialSegment(initialData)
+  const initialMode: EntryMode = initialData?.hasDetailedScores ? 'hole-by-hole' : 'score-only'
+  const [entryMode, setEntryMode] = useState<EntryMode>(initialMode)
   const [courseName, setCourseName] = useState(initialData?.courseName ?? '')
   const [selectedPresetId, setSelectedPresetId] = useState<string>('')
   const [teeColor, setTeeColor] = useState<TeeColor>(DEFAULT_TEE_COLOR)
   const [roundSegment, setRoundSegment] = useState<RoundSegment>(initialSegment)
   const [holes, setHoles] = useState<Hole[]>(initialData?.holes ?? defaultHolesForSegment(initialSegment))
+  const [totalScore, setTotalScore] = useState<string>('')
   const [isCvgaTournament, setIsCvgaTournament] = useState(false)
 
   const holesCount = holesPlayedFromSegment(roundSegment)
@@ -167,23 +173,34 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
   }
 
   const totals = useMemo(
-    () => ({
-      score: holes.reduce((s, h) => s + h.score, 0),
-      par: holes.reduce((s, h) => s + h.par, 0),
-      putts: holes.reduce((s, h) => s + h.putts, 0),
-    }),
-    [holes],
+    () => {
+      if (entryMode === 'score-only') {
+        return {
+          score: totalScore ? Number(totalScore) : 0,
+          par: 0,
+          putts: 0,
+        }
+      }
+      return {
+        score: holes.reduce((s, h) => s + h.score, 0),
+        par: holes.reduce((s, h) => s + h.par, 0),
+        putts: holes.reduce((s, h) => s + h.putts, 0),
+      }
+    },
+    [holes, totalScore, entryMode],
   )
 
   const today = new Date().toISOString().slice(0, 10)
 
   return (
     <form action={action} className="space-y-4 pb-24">
-      <input type="hidden" name="holes" value={JSON.stringify(holes)} />
+      <input type="hidden" name="holes" value={JSON.stringify(entryMode === 'score-only' ? [] : holes)} />
       <input type="hidden" name="holesPlayed" value={holesCount} />
       <input type="hidden" name="teeColor" value={teeColor} />
       <input type="hidden" name="roundSegment" value={roundSegment} />
       <input type="hidden" name="isCvgaTournament" value={isCvgaTournament ? 'true' : 'false'} />
+      <input type="hidden" name="entryMode" value={entryMode} />
+      {entryMode === 'score-only' && <input type="hidden" name="scoreOnly" value={totalScore} />}
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
         <span className="text-2xl">🏌️</span>
@@ -192,6 +209,43 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
           <p className="text-xs text-blue-700 mt-1">Keep improving in the offseason! Log your rounds and compete on the leaderboard.</p>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="pt-5 space-y-3">
+          <div className="space-y-2">
+            <Label>How would you like to log this round?</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setEntryMode('score-only')}
+                className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                  entryMode === 'score-only'
+                    ? 'border-[#FFD700] bg-[#FFD700]/10 text-black'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                ⚡ Quick<br />Score Only
+              </button>
+              <button
+                type="button"
+                onClick={() => setEntryMode('hole-by-hole')}
+                className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                  entryMode === 'hole-by-hole'
+                    ? 'border-[#FFD700] bg-[#FFD700]/10 text-black'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📊 Detailed<br />Hole-by-Hole
+              </button>
+            </div>
+            {entryMode === 'score-only' && (
+              <p className="text-xs text-amber-700 bg-amber-50 rounded p-2 mt-2">
+                💡 Quick entry tracks your score, but detailed stats (GIR, FIR, putting stats) and awards require hole-by-hole scoring.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="pt-5 space-y-3">
@@ -284,28 +338,59 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-4 space-y-2">
-          <div className="grid grid-cols-[40px_56px_56px_44px_44px_56px] gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
-            <span>#</span>
-            <span>Par</span>
-            <span>Score</span>
-            <span className="text-center">Fwy</span>
-            <span className="text-center">GIR</span>
-            <span>Putts</span>
-          </div>
-          <div className="divide-y">
-            {holes.map((h, i) => (
-              <HoleRow
-                key={i}
-                hole={h}
-                yardage={teeYardages?.[i] ?? null}
-                onChange={(key, value) => update(i, key, value)}
+      {entryMode === 'score-only' ? (
+        <Card>
+          <CardContent className="pt-5 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="totalScore">Total Score</Label>
+              <Input
+                id="totalScore"
+                name="totalScore"
+                type="number"
+                inputMode="numeric"
+                placeholder="72"
+                value={totalScore}
+                onChange={(e) => setTotalScore(e.target.value)}
+                required
+                className="h-12 text-base"
               />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-xs text-blue-800">
+                <strong>Unlocked with this round:</strong> Scoring badges (Break 100/90/80/75, Even Par), leaderboard rankings, round history
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-4 space-y-2">
+            <div className="grid grid-cols-[40px_56px_56px_44px_44px_56px] gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+              <span>#</span>
+              <span>Par</span>
+              <span>Score</span>
+              <span className="text-center">Fwy</span>
+              <span className="text-center">GIR</span>
+              <span>Putts</span>
+            </div>
+            <div className="divide-y">
+              {holes.map((h, i) => (
+                <HoleRow
+                  key={i}
+                  hole={h}
+                  yardage={teeYardages?.[i] ?? null}
+                  onChange={(key, value) => update(i, key, value)}
+                />
+              ))}
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg border border-green-200 mt-3">
+              <p className="text-xs text-green-800">
+                <strong>Unlocked with detailed scoring:</strong> Scoring badges, statistics (GIR %, FIR %, putts), putting milestones, streaks, all awards
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="pt-5 space-y-3">
@@ -369,15 +454,19 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="text-sm">
             <div className="font-semibold tabular-nums">
-              {totals.score} <span className="text-muted-foreground font-normal">({totals.score - totals.par >= 0 ? '+' : ''}{totals.score - totals.par})</span>
+              {totals.score} {entryMode === 'hole-by-hole' && <span className="text-muted-foreground font-normal">({totals.score - totals.par >= 0 ? '+' : ''}{totals.score - totals.par})</span>}
             </div>
             <div className="text-[11px] text-muted-foreground tabular-nums">
-              Par {totals.par} · {totals.putts} putts
+              {entryMode === 'hole-by-hole' ? (
+                <>Par {totals.par} · {totals.putts} putts</>
+              ) : (
+                <>Quick entry (stats unavailable)</>
+              )}
             </div>
           </div>
           <Button
             type="submit"
-            disabled={pending}
+            disabled={pending || (entryMode === 'score-only' && !totalScore)}
             className="flex-1 h-12 bg-[#FFD700] text-black hover:bg-[#e6c200] font-semibold"
           >
             {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Save Round'}

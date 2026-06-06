@@ -101,7 +101,8 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
   }
 
   for (const r of sorted) {
-    if (r.holes.length === 0) continue
+    // For score-only rounds, skip badge awards that require hole-by-hole data
+    const hasDetailedData = r.holes.length > 0
 
     const sumPar = r.holes.reduce((s, h) => s + h.par, 0)
     const total = r.totalScore ?? r.holes.reduce((s, h) => s + h.score, 0)
@@ -117,61 +118,63 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     const firHit = firHoles.filter((h) => h.fairwayHit === true).length
     const firPct = firHoles.length > 0 ? firHit / firHoles.length : null
 
-    // Tournaments
+    // Tournaments (always available, even for score-only rounds)
     if (r.isCvgaTournament) award('cvga_competitor', r.date)
 
-    // Scoring 18
+    // Scoring badges (available for all rounds)
     if (r.holesPlayed === 18) {
       if (total < 100) award('break_100_18', r.date)
       if (total < 90)  award('break_90_18',  r.date)
       if (total < 80)  award('break_80_18',  r.date)
       if (total < 75)  award('break_75_18',  r.date)
-      if (total <= sumPar) award('even_par_18', r.date)
+      if (hasDetailedData && total <= sumPar) award('even_par_18', r.date)
     }
 
-    // Scoring 9
     if (r.holesPlayed === 9) {
       if (total < 50) award('break_50_9', r.date)
       if (total < 40) award('break_40_9', r.date)
-      if (total <= sumPar) award('even_par_9', r.date)
+      if (hasDetailedData && total <= sumPar) award('even_par_9', r.date)
     }
 
-    // Pars
-    if (pars >= 1) award('one_par',    r.date)
-    if (pars >= 3) award('three_pars', r.date)
-    if (pars >= 5) award('five_pars',  r.date)
-    if (pars >= 7) award('seven_pars', r.date)
-    if (pars >= 9) award('nine_pars',  r.date)
+    // All other badges require detailed hole-by-hole data
+    if (hasDetailedData) {
+      // Pars
+      if (pars >= 1) award('one_par',    r.date)
+      if (pars >= 3) award('three_pars', r.date)
+      if (pars >= 5) award('five_pars',  r.date)
+      if (pars >= 7) award('seven_pars', r.date)
+      if (pars >= 9) award('nine_pars',  r.date)
 
-    // Birdies
-    if (birdies >= 1) award('one_birdie',    r.date)
-    if (birdies >= 2) award('two_birdies',   r.date)
-    if (birdies >= 3) award('three_birdies', r.date)
+      // Birdies
+      if (birdies >= 1) award('one_birdie',    r.date)
+      if (birdies >= 2) award('two_birdies',   r.date)
+      if (birdies >= 3) award('three_birdies', r.date)
 
-    // Feats
-    if (eagles >= 1) award('eagle', r.date)
-    if (maxPutts < 3) award('no_three_putts', r.date)
-    if (doubles === 0) award('no_double_bogeys', r.date)
-    if (triples === 0) award('no_triples', r.date)
+      // Feats
+      if (eagles >= 1) award('eagle', r.date)
+      if (maxPutts < 3) award('no_three_putts', r.date)
+      if (doubles === 0) award('no_double_bogeys', r.date)
+      if (triples === 0) award('no_triples', r.date)
 
-    // Greens & Fairways
-    const girPct = r.holes.length > 0 ? girCount / r.holes.length : 0
-    if (girPct >= 0.30) award('gir_30', r.date)
-    if (girPct >= 0.50) award('gir_50', r.date)
-    if (girPct >= 0.70) award('gir_70', r.date)
-    if (firPct !== null && firPct >= 0.30) award('fir_30', r.date)
-    if (firPct !== null && firPct >= 0.50) award('fir_50', r.date)
-    if (firPct !== null && firPct >= 0.70) award('fir_70', r.date)
+      // Greens & Fairways
+      const girPct = r.holes.length > 0 ? girCount / r.holes.length : 0
+      if (girPct >= 0.30) award('gir_30', r.date)
+      if (girPct >= 0.50) award('gir_50', r.date)
+      if (girPct >= 0.70) award('gir_70', r.date)
+      if (firPct !== null && firPct >= 0.30) award('fir_30', r.date)
+      if (firPct !== null && firPct >= 0.50) award('fir_50', r.date)
+      if (firPct !== null && firPct >= 0.70) award('fir_70', r.date)
 
-    // Putting milestones
-    if (r.holesPlayed === 18) {
-      if (totalPutts <= 36) award('putts_36_18', r.date)
-      if (totalPutts <= 32) award('putts_32_18', r.date)
-      if (totalPutts <= 28) award('putts_28_18', r.date)
-    }
-    if (r.holesPlayed === 9) {
-      if (totalPutts <= 18) award('putts_18_9', r.date)
-      if (totalPutts <= 15) award('putts_15_9', r.date)
+      // Putting milestones
+      if (r.holesPlayed === 18) {
+        if (totalPutts <= 36) award('putts_36_18', r.date)
+        if (totalPutts <= 32) award('putts_32_18', r.date)
+        if (totalPutts <= 28) award('putts_28_18', r.date)
+      }
+      if (r.holesPlayed === 9) {
+        if (totalPutts <= 18) award('putts_18_9', r.date)
+        if (totalPutts <= 15) award('putts_15_9', r.date)
+      }
     }
   }
 
@@ -181,10 +184,17 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
   if (sorted.length >= 20) award('rounds_20', sorted[19].date)
   if (sorted.length >= 30) award('rounds_30', sorted[29].date)
 
-  // Streak milestones by round sequence
+  // Streak milestones by round sequence (requires detailed scores)
   let birdieRun = 0
   let parRun = 0
   for (const r of sorted) {
+    // Streaks require hole-by-hole data
+    if (r.holes.length === 0) {
+      birdieRun = 0
+      parRun = 0
+      continue
+    }
+
     const birdies = r.holes.filter((h) => h.score - h.par === -1).length
     const pars = r.holes.filter((h) => h.score === h.par).length
 

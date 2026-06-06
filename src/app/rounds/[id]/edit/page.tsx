@@ -32,6 +32,7 @@ export default async function EditRoundPage({ params }: Props) {
     })),
     weatherNotes: round.weatherNotes ?? null,
     freeTextNotes: round.freeTextNotes ?? null,
+    hasDetailedScores: round.hasDetailedScores,
   }
 
   return (

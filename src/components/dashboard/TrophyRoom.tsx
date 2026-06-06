@@ -11,9 +11,11 @@ const GROUP_LABELS: Record<BadgeGroup, string> = {
   feats:             'Feats',
   greens_fairways:   'Greens & Fairways',
   putting_milestones: 'Putting Milestones',
+  tournaments:       'Tournaments',
 }
 
 const GROUP_ORDER: BadgeGroup[] = [
+  'tournaments',
   'scoring_18',
   'scoring_9',
   'pars',

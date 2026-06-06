@@ -72,6 +72,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
   const roundSegment = ((formData.get('roundSegment') as string) || '').trim() || null
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
+  const isCvgaTournament = (formData.get('isCvgaTournament') as string) === 'true'
   const holesJson = formData.get('holes') as string
 
   if (!courseName) return 'Course name is required.'
@@ -107,6 +108,7 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
       totalScore,
       weatherNotes,
       freeTextNotes,
+      isCvgaTournament,
       seasonId,
     })
     .returning({ id: rounds.id })
@@ -151,6 +153,7 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   const roundSegment = ((formData.get('roundSegment') as string) || '').trim() || null
   const weatherNotes = ((formData.get('weatherNotes') as string) || '').trim() || null
   const freeTextNotes = ((formData.get('freeTextNotes') as string) || '').trim() || null
+  const isCvgaTournament = (formData.get('isCvgaTournament') as string) === 'true'
   const holesJson = formData.get('holes') as string
 
   if (!courseName) return 'Course name is required.'
@@ -173,7 +176,7 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   const totalScore = holes.reduce((sum, h) => sum + h.score, 0)
 
   await db.transaction(async (tx) => {
-    await tx.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes }).where(eq(rounds.id, roundId))
+    await tx.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes, isCvgaTournament }).where(eq(rounds.id, roundId))
     await tx.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
     await tx.insert(roundHoles).values(
       holes.map((h) => ({

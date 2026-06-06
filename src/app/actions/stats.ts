@@ -345,6 +345,7 @@ export async function getMyBadges(): Promise<EarnedMap> {
       date: rounds.date,
       holesPlayed: rounds.holesPlayed,
       totalScore: rounds.totalScore,
+      isCvgaTournament: rounds.isCvgaTournament,
     })
     .from(rounds)
     .where(eq(rounds.userId, userId))
@@ -374,6 +375,7 @@ export async function getMyBadges(): Promise<EarnedMap> {
     date: String(r.date),
     holesPlayed: r.holesPlayed,
     totalScore: r.totalScore,
+    isCvgaTournament: r.isCvgaTournament,
     holes: holesByRound.get(r.id) ?? [],
   }))
 

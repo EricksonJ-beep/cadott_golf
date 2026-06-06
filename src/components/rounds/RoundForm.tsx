@@ -99,6 +99,7 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
   const [teeColor, setTeeColor] = useState<TeeColor>(DEFAULT_TEE_COLOR)
   const [roundSegment, setRoundSegment] = useState<RoundSegment>(initialSegment)
   const [holes, setHoles] = useState<Hole[]>(initialData?.holes ?? defaultHolesForSegment(initialSegment))
+  const [isCvgaTournament, setIsCvgaTournament] = useState(false)
 
   const holesCount = holesPlayedFromSegment(roundSegment)
 
@@ -182,6 +183,15 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
       <input type="hidden" name="holesPlayed" value={holesCount} />
       <input type="hidden" name="teeColor" value={teeColor} />
       <input type="hidden" name="roundSegment" value={roundSegment} />
+      <input type="hidden" name="isCvgaTournament" value={isCvgaTournament ? 'true' : 'false'} />
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
+        <span className="text-2xl">🏌️</span>
+        <div className="flex-1">
+          <p className="font-semibold text-sm text-blue-900">Summer Rounds</p>
+          <p className="text-xs text-blue-700 mt-1">Keep improving in the offseason! Log your rounds and compete on the leaderboard.</p>
+        </div>
+      </div>
 
       <Card>
         <CardContent className="pt-5 space-y-3">
@@ -319,6 +329,34 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
               defaultValue={initialData?.freeTextNotes ?? ''}
               className="text-sm"
             />
+          </div>
+          <div className="pt-2 border-t">
+            <div className="flex items-start gap-3">
+              <input
+                id="isCvgaTournament"
+                type="checkbox"
+                checked={isCvgaTournament}
+                onChange={(e) => setIsCvgaTournament(e.target.checked)}
+                className="mt-1 cursor-pointer"
+              />
+              <div className="flex-1">
+                <Label htmlFor="isCvgaTournament" className="font-medium cursor-pointer">
+                  CVGA Tournament Round
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Logging a round from the{' '}
+                  <a
+                    href="https://www.cvga.com/juniors.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-700"
+                  >
+                    CVGA Junior Tour
+                  </a>
+                  ?
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

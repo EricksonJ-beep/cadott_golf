@@ -29,6 +29,13 @@
       "when": 1777859698977,
       "tag": "0003_slippery_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780716031318,
+      "tag": "0004_fuzzy_warbird",
+      "breakpoints": true
     }
   ]
 }

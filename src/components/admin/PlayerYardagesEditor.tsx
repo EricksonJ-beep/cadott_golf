@@ -382,7 +382,8 @@ export default function PlayerYardagesEditor({
       <Card>
         <CardContent className="py-3">
           <p className="text-sm text-muted-foreground">
-            Edit mode is enabled. Tap any wedge cell or club row to update yardages.
+            Edit mode is enabled. Tap any wedge cell or club row to update
+            yardages.
           </p>
         </CardContent>
       </Card>

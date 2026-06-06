@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getMyRounds } from '@/app/actions/rounds'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import CvgaScheduleWidget from './CvgaScheduleWidget'
 
 export default async function RoundsTab() {
   const rounds = await getMyRounds()
@@ -15,6 +16,8 @@ export default async function RoundsTab() {
           + Log a Round
         </Button>
       </Link>
+
+      <CvgaScheduleWidget />
 
       {rounds.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">

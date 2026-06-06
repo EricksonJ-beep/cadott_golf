@@ -157,6 +157,7 @@ export const rounds = pgTable('rounds', {
   weatherNotes: text('weather_notes'),
   freeTextNotes: text('free_text_notes'),
   seasonId: integer('season_id').references(() => seasons.id),
+  isCvgaTournament: boolean('is_cvga_tournament').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

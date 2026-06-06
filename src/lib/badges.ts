@@ -8,6 +8,7 @@ export type BadgeGroup =
   | 'feats'
   | 'greens_fairways'
   | 'putting_milestones'
+  | 'tournaments'
 
 export type BadgeDef = {
   id: string
@@ -74,12 +75,16 @@ export const BADGE_DEFS: BadgeDef[] = [
   { id: 'putts_28_18', name: '≤28 Putts (18)', emoji: '💫', description: 'Finish an 18-hole round with 28 or fewer total putts',      group: 'putting_milestones' },
   { id: 'putts_18_9',  name: '≤18 Putts (9)',  emoji: '🎱', description: 'Average 2 putts per hole over 9 holes',                    group: 'putting_milestones' },
   { id: 'putts_15_9',  name: '≤15 Putts (9)',  emoji: '✨', description: 'Finish a 9-hole round with 15 or fewer total putts',        group: 'putting_milestones' },
+
+  // Tournaments
+  { id: 'cvga_competitor', name: 'CVGA Competitor', emoji: '🏆', description: 'Play in a CVGA Junior Tour event', group: 'tournaments' },
 ]
 
 export type RoundForBadges = {
   date: string // ISO date
   holesPlayed: number
   totalScore: number | null
+  isCvgaTournament: boolean
   holes: { par: number; score: number; putts: number; gir: boolean; fairwayHit: boolean | null }[]
 }
 
@@ -111,6 +116,9 @@ export function computeEarnedBadges(rounds: RoundForBadges[]): EarnedMap {
     const firHoles = r.holes.filter((h) => h.par >= 4)
     const firHit = firHoles.filter((h) => h.fairwayHit === true).length
     const firPct = firHoles.length > 0 ? firHit / firHoles.length : null
+
+    // Tournaments
+    if (r.isCvgaTournament) award('cvga_competitor', r.date)
 
     // Scoring 18
     if (r.holesPlayed === 18) {

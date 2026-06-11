@@ -123,17 +123,19 @@ export async function saveRound(_prevState: string | null, formData: FormData) {
     })
     .returning({ id: rounds.id })
 
-  await db.insert(roundHoles).values(
-    holes.map((h) => ({
-      roundId: inserted.id,
-      holeNumber: h.holeNumber,
-      par: h.par,
-      score: h.score,
-      fairwayHit: h.fairwayHit,
-      gir: h.gir,
-      putts: h.putts,
-    })),
-  )
+  if (holes.length > 0) {
+    await db.insert(roundHoles).values(
+      holes.map((h) => ({
+        roundId: inserted.id,
+        holeNumber: h.holeNumber,
+        par: h.par,
+        score: h.score,
+        fairwayHit: h.fairwayHit,
+        gir: h.gir,
+        putts: h.putts,
+      })),
+    )
+  }
 
   revalidatePath('/dashboard')
   redirect(`/rounds/${inserted.id}`)
@@ -197,17 +199,19 @@ export async function updateRound(roundId: number, _prevState: string | null, fo
   await db.transaction(async (tx) => {
     await tx.update(rounds).set({ courseName, date, holesPlayed, teeColor, roundSegment, totalScore, weatherNotes, freeTextNotes, isCvgaTournament }).where(eq(rounds.id, roundId))
     await tx.delete(roundHoles).where(eq(roundHoles.roundId, roundId))
-    await tx.insert(roundHoles).values(
-      holes.map((h) => ({
-        roundId,
-        holeNumber: h.holeNumber,
-        par: h.par,
-        score: h.score,
-        fairwayHit: h.fairwayHit,
-        gir: h.gir,
-        putts: h.putts,
-      })),
-    )
+    if (holes.length > 0) {
+      await tx.insert(roundHoles).values(
+        holes.map((h) => ({
+          roundId,
+          holeNumber: h.holeNumber,
+          par: h.par,
+          score: h.score,
+          fairwayHit: h.fairwayHit,
+          gir: h.gir,
+          putts: h.putts,
+        })),
+      )
+    }
   })
 
   revalidatePath('/dashboard')

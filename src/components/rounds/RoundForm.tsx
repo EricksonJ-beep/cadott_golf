@@ -200,7 +200,6 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
       <input type="hidden" name="roundSegment" value={roundSegment} />
       <input type="hidden" name="isCvgaTournament" value={isCvgaTournament ? 'true' : 'false'} />
       <input type="hidden" name="entryMode" value={entryMode} />
-      {entryMode === 'score-only' && <input type="hidden" name="scoreOnly" value={totalScore} />}
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
         <span className="text-2xl">🏌️</span>
@@ -373,7 +372,7 @@ export default function RoundForm({ initialData }: { initialData?: InitialData }
               <Label htmlFor="totalScore">Total Score</Label>
               <Input
                 id="totalScore"
-                name="totalScore"
+                name="scoreOnly"
                 type="number"
                 inputMode="numeric"
                 placeholder="72"

@@ -7,7 +7,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { isHigherScoreBetter } from '@/lib/challenge-scoring'
-import { getCurrentSeasonByKind, getCurrentSeasonKind, getMostRecentSeasonByKind } from '@/lib/seasons'
+import { getCurrentSeason, getMostRecentSeasonByKind, getSeasonIdForDate } from '@/lib/seasons'
 
 async function requireUser() {
   const session = await auth()
@@ -22,11 +22,13 @@ async function requireCoach() {
 }
 
 export async function getActiveChallenges() {
-  const kind = await getCurrentSeasonKind()
+  // Challenges are season-agnostic for display: every active challenge shows in
+  // both regular season and offseason. Results are bucketed by the season that
+  // is actually in effect when a result is logged (see logChallengeResult).
   return db
     .select()
     .from(challenges)
-    .where(and(eq(challenges.isActive, true), eq(challenges.kind, kind)))
+    .where(eq(challenges.isActive, true))
     .orderBy(
       desc(challenges.isFeatured),
       challenges.category,
@@ -92,8 +94,12 @@ export async function getSeasonLeaderboard(challengeId: number) {
   const challenge = await getChallenge(challengeId)
   if (!challenge) return { rows: [], seasonName: null }
 
+  // Leaderboard reflects whichever season is currently in effect (offseason
+  // during summer, regular during the spring season), falling back to the most
+  // recent season of that kind when none is in date range.
+  const current = await getCurrentSeason()
   const season =
-    (await getCurrentSeasonByKind(challenge.kind)) ??
+    current ??
     (await getMostRecentSeasonByKind(challenge.kind))
   if (!season) return { rows: [], seasonName: null }
 
@@ -175,15 +181,20 @@ export async function logChallengeResult(_prevState: string | null, formData: Fo
     return `Score cannot exceed ${challenge.maxScore}.`
   }
 
-  const season =
-    (await getCurrentSeasonByKind(challenge.kind)) ??
-    (await getMostRecentSeasonByKind(challenge.kind))
+  // File the result under the season that is actually in effect today (offseason
+  // during summer), not the challenge's kind. Falls back to the most recent
+  // season of the challenge's kind when no season currently contains today.
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const seasonId =
+    (await getSeasonIdForDate(todayStr)) ??
+    (await getMostRecentSeasonByKind(challenge.kind))?.id ??
+    null
 
   await db.insert(challengeResults).values({
     userId,
     challengeId,
     score,
-    seasonId: season?.id ?? null,
+    seasonId,
     notes,
   })
 
